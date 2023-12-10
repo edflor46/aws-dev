@@ -225,9 +225,35 @@ Cuando un cliente se conecta a un servidor, un puerto aleatorio del rango de pue
 
 El puerto efímero designado se convierte en el puerto de destino para el tráfico de retorno del servicio. El tráfico saliente al puerto efímero debe estar permitido en la ACL de red.
 
+### Plantilla de AWS CloudFormation
+
+La plantilla de AWS CloudFormation es un archivo de texto con formato JSON o YAML que describe su infraestructura de AWS. Las plantillas incluyen varias secciones principales. La sección "Recursos" es la única obligatoria. La sección opcional "Transform" especifica una o más macros que AWS CloudFormation utiliza para procesar su plantilla.
+
+### AWS Serverless Application Model (SAM)
+
+AWS Serverless Application Model (SAM) es un framework de código abierto para crear aplicaciones sin servidor. Proporciona una sintaxis abreviada para expresar funciones, API, bases de datos y mapeos de origen de eventos. Con sólo unas pocas líneas por recurso, puede definir la aplicación que desee y modelarla utilizando YAML.
+
+La transformación de AWS::Serverless, que es una macro alojada en AWS CloudFormation, toma una plantilla completa escrita en la sintaxis del modelo de aplicación sin servidor de AWS (AWS SAM) y la transforma y expande en una plantilla compatible con AWS CloudFormation. Por lo tanto, la presencia de la sección "Transform" indica que el documento es una plantilla SAM.
+
 ### Modelo de aplicación sin servidor de AWS (AWS SAM)
 
 Utiliza la especificación de AWS SAM para definir su aplicación sin servidor. Las plantillas de AWS SAM son una extensión de las plantillas de AWS CloudFormation, con algunos componentes adicionales que facilitan el trabajo con ellas. AWS SAM necesita las plantillas de CloudFormation como base para su configuración.
+
+### SAM soporta los siguientes tipos de recursos
+
+AWS::Serverless::Api
+
+AWS::Serverless::Application
+
+AWS::Serverless::Function
+
+AWS::Serverless::HttpApi
+
+AWS::Serverless::LayerVersion
+
+AWS::Serverless::SimpleTable
+
+AWS::Serverless::StateMachine
 
 ### Afirmaciones sobre la configuración de datos de usuario de EC2
 
@@ -274,3 +300,305 @@ Un nombre de host no distingue entre mayúsculas y minúsculas, puede tener una 
 
 Debe incluir al menos un carácter ".". Sólo puede incluir caracteres alfabéticos después del carácter "." final.
 
+### IAM Access Analyzer
+
+AWS IAM Access Analyzer le ayuda a identificar los recursos de su organización y cuentas, como buckets de Amazon S3 o roles de IAM, que se comparten con una entidad externa. Esto le permite identificar el acceso no intencionado a sus recursos y datos, lo que supone un riesgo para la seguridad.
+
+Puede establecer el ámbito del analizador en una organización o una cuenta de AWS. Esta es su Zona de Confianza. El analizador examina todos los recursos compatibles dentro de su Zona de confianza. Cuando Access Analyzer encuentra una directiva que permite el acceso a un recurso desde fuera de su zona de confianza, genera un hallazgo activo.
+
+### Política de confianza
+
+Las políticas de confianza definen qué entidades principales (cuentas, usuarios, roles y usuarios federados) pueden asumir el rol. Un rol IAM es tanto una identidad como un recurso que soporta políticas basadas en recursos. Por este motivo, debe adjuntar tanto una política de confianza como una política basada en identidades a un rol de IAM. El servicio IAM sólo soporta un tipo de política basada en recursos denominada política de confianza de rol, que se adjunta a un rol IAM.
+
+### Autorizador Lambda
+
+Un autorizador de Lambda de Amazon API Gateway (anteriormente conocido como autorizador personalizado) es una función de Lambda que proporciona para controlar el acceso a su API. Un autorizador de Lambda utiliza estrategias de autenticación de token de portador, como OAuth o SAML. Antes de crear un autorizador de Lambda de API Gateway, primero debe crear la función de AWS Lambda que implementa la lógica para autorizar y, si es necesario, autenticar a la persona que llama.
+
+### Variables de la política IAM
+
+En lugar de crear políticas individuales para cada usuario, puede utilizar variables de política y crear una única política que se aplique a varios usuarios (una política de grupo). Las variables de política actúan como marcadores de posición. Cuando realiza una petición a AWS, el marcador de posición se sustituye por un valor de la petición cuando se evalúa la política.
+
+A modo de ejemplo, la siguiente política otorga a cada uno de los usuarios del grupo acceso programático completo a un objeto específico del usuario (su propio "directorio personal") en Amazon S3.
+
+### Cognito User Pools
+
+Tras una autenticación correcta, Amazon Cognito devuelve tokens de grupos de usuarios a su aplicación. Puede utilizar los tokens para conceder a sus usuarios acceso a sus propios recursos del lado del servidor o a Amazon API Gateway.
+
+Los grupos de usuarios de Amazon Cognito implementan tokens de ID, acceso y actualización según lo definido por el estándar abierto OpenID Connect (OIDC).
+
+El token de ID es un token web JSON (JWT) que contiene información sobre la identidad del usuario autenticado, como el nombre, el email y el número de teléfono. Puede utilizar esta información de identidad dentro de su aplicación. El token de identificación también se puede utilizar para autenticar usuarios contra sus servidores de recursos o aplicaciones de servidor.
+
+### Muestra de X-Ray
+
+Al personalizar las reglas de muestreo, puede controlar la cantidad de datos que se registran y modificar el comportamiento de muestreo sobre la marcha sin modificar ni volver a desplegar el código. Las reglas de muestreo indican al SDK de X-Ray cuántas peticiones debe registrar para un conjunto de criterios. X-Ray SDK aplica un algoritmo de muestreo para determinar qué peticiones se rastrean. Sin embargo, el hecho de que nuestra aplicación no envíe datos a X-Ray no ayuda a determinar la causa del fallo.
+
+### Amazon RDS
+
+Amazon RDS utiliza la funcionalidad de replicación integrada del motor de base de datos PostgreSQL para crear un tipo especial de instancia de base de datos denominada réplica de lectura a partir de una instancia de base de datos de origen. La instancia de base de datos de origen se convierte en la instancia de base de datos principal. Las actualizaciones realizadas en la instancia de base de datos primaria se copian de forma asíncrona en la réplica de lectura. Puede reducir la carga de su instancia de base de datos primaria dirigiendo las consultas de lectura de sus aplicaciones a la réplica de lectura. Utilizando réplicas de lectura, puede escalar elásticamente más allá de las limitaciones de capacidad de una única instancia de base de datos para cargas de trabajo de base de datos de lectura intensiva. Para el caso de uso dado, puede conseguir un rendimiento de lectura óptimo para consultas SQL utilizando el endpoint de réplica de lectura para la carga de trabajo de lectura intensiva.
+
+### Planes de uso de API Gateway
+
+Amazon API Gateway es un servicio de AWS para crear, publicar, mantener, monitorizar y proteger API REST, HTTP y WebSocket a cualquier escala. Los desarrolladores de API pueden crear API que accedan a AWS o a otros servicios web, así como a los datos almacenados en el Cloud de AWS.
+
+Un plan de uso especifica quién puede acceder a una o más etapas y métodos de API implementados, y también cuánto y con qué rapidez pueden acceder a ellos. El plan utiliza claves de API para identificar a los clientes de API y mide el acceso a las etapas de API asociadas para cada clave.
+
+Puede configurar planes de uso y claves de API para permitir que los clientes accedan a las API seleccionadas según las cuotas y tasas de petición acordadas que se ajusten a sus requisitos empresariales y a sus limitaciones presupuestarias.
+
+### Politica de escalado de seguimiento
+
+Si utiliza una política de escalado de seguimiento de objetivos basada en una métrica de cola de Amazon SQS personalizada, el escalado dinámico puede ajustarse a la curva de demanda de su aplicación de forma más eficaz.
+
+El problema de utilizar una métrica de Amazon SQS de CloudWatch como ApproximateNumberOfMessagesVisible para el seguimiento de objetivos es que el número de mensajes en la cola puede no cambiar proporcionalmente al tamaño del Auto Scaling Group que procesa los mensajes de la cola. Esto se debe a que el número de mensajes en la cola de SQS no define únicamente el número de instancias necesarias. El número de instancias de su grupo de Auto Scaling puede depender de varios factores, incluido el tiempo que se tarda en procesar un mensaje y la cantidad aceptable de latencia (retardo de la cola).
+
+La solución es utilizar una métrica de retraso por instancia cuyo valor objetivo sea el retraso por instancia aceptable para mantener. Puede calcular estas cifras de la siguiente manera:
+
+Backlog por instancia: Para calcular el retraso por instancia, comience con el atributo de cola ApproximateNumberOfMessages para determinar la longitud de la cola SQS (número de mensajes disponibles para recuperar de la cola). Divida ese número por la capacidad de ejecución de la flota, que para un grupo Auto Scaling es el número de instancias en estado InService, para obtener el backlog por instancia.
+
+Retraso aceptable por instancia: Para calcular su valor objetivo, determine primero lo que su aplicación puede aceptar en términos de latencia. A continuación, tome el valor de latencia aceptable y divídalo por el tiempo medio que tarda una instancia EC2 en procesar un mensaje.
+
+Para ilustrarlo con un ejemplo, digamos que el ApproximateNumberOfMessages actual es 1500 y la capacidad de ejecución de la flota es 10. Si el tiempo medio de procesamiento es de 0,1 segundos para cada mensaje y la latencia más larga aceptable es de 10 segundos, el retraso aceptable por instancia es de 10 / 0,1, lo que equivale a 100. Esto significa que 100 es el valor objetivo. Esto significa que 100 es el valor objetivo para su política de seguimiento de objetivos. Si el backlog por instancia es actualmente de 150 (1500 / 10), su flota se escala, y se escala en cinco instancias para mantener la proporción con el valor objetivo.
+
+En resumen: ***Utilizar métrica de backlog por instancia con política de escalado de seguimiento de objetivos***
+
+### ElastiCache definido en .ebextensions/
+
+Cualquier recurso creado como parte de su .ebextensions es parte de su plantilla de Elastic Beanstalk y será eliminado si el entorno es terminado.
+
+### Base de datos RDS definida externamente
+
+Para desacoplar la instancia de base de datos del entorno, puede ejecutar una instancia de base de datos en Amazon RDS y configurar la aplicación para que se conecte a ella en el lanzamiento. Esto le permite conectar varios entornos a una base de datos, finalizar un entorno sin afectar a la base de datos y realizar actualizaciones sin interrupciones con despliegues Blue/Green. Para permitir que las instancias de Amazon EC2 de su entorno se conecten a una base de datos externa, puede configurar el grupo Auto Scaling Group del entorno con un grupo de seguridad adicional.
+
+### Rolling
+
+La política de despliegue Rolling despliega la nueva versión por lotes. Cada lote se pone fuera de servicio durante la fase de despliegue, reduciendo la capacidad de su entorno por el número de instancias en un lote. El coste sigue siendo el mismo, ya que el número de instancias EC2 no aumenta. Esta política evita el tiempo de inactividad y minimiza la reducción de la disponibilidad, a costa de un mayor tiempo de despliegue.
+
+### Inmutable
+
+La política de despliegue 'Inmutable' garantiza que la nueva versión de la aplicación se despliegue siempre en las nuevas instancias, en lugar de actualizar las instancias existentes. También tiene la ventaja adicional de una reversión rápida y segura en caso de que falle el despliegue.
+
+### Todo a la vez
+
+Esta política despliega la nueva versión en todas las instancias simultáneamente. Aunque "Todo a la vez" es el método de despliegue más rápido, la aplicación puede dejar de estar disponible para los usuarios (o tener una baja disponibilidad) durante un breve periodo de tiempo.
+
+### Tipos de credenciales NO es soportado por IAM para CodeCommit
+
+**Nombre de usuario y contraseña de IAM** - Las credenciales de nombre de usuario y contraseña de IAM no se pueden utilizar para acceder a CodeCommit.
+
+### Utilizar el parámetro
+
+Utilizar el parámetro ***--region***: Si no se establece el parámetro de región, el comando CLI se ejecuta contra la región predeterminada de AWS.
+
+### Invocar la función !FindInMap
+
+!FindInMap [ MapName, TopLevelKey, SecondLevelKey ] - La función intrínseca Fn::FindInMap devuelve el valor correspondiente a las claves de un mapa de dos niveles declarado en la sección Mappings. Sintaxis YAML para el nombre completo de la función: Fn::FindInMap: [ MapName, TopLevelKey, SecondLevelKey ]
+
+La forma abreviada de la sintaxis anterior es : !FindInMap [ MapName, TopLevelKey, SecondLevelKey ]
+
+Donde,
+
+MapName - Es el nombre lógico de un mapeo declarado en la sección Mappings que contiene las claves y los valores. TopLevelKey - Es el nombre de la clave de nivel superior. Su valor es una lista de pares clave-valor. SecondLevelKey - El nombre de la clave de segundo nivel, que se establece en una de las claves de la lista asignada a TopLevelKey.
+
+Considere la siguiente plantilla YAML:
+
+<pre><code>
+Mappings:
+    RegionMap:
+        us-east-1:
+        HVM64: "ami-0ff8a91507f77f867"
+        HVMG2: "ami-0a584ac55a7631c0c"
+        us-west-1:
+        HVM64: "ami-0bdb828fd58c52235"
+        HVMG2: "ami-066ee5fd4a9ef77f1"
+        eu-west-1:
+        HVM64: "ami-047bb4163c506cd98"
+        HVMG2: "ami-31c2f645"
+        ap-southeast-1:
+        HVM64: "ami-08569b978cc4dfa10"
+        HVMG2: "ami-0be9df32ae9f92309"
+        ap-northeast-1:
+        HVM64: "ami-06cd52961ce9f0d85"
+        HVMG2: "ami-053cdd503598e4a9d"
+Resources:
+    myEC2Instance:
+        Type: "AWS::EC2::Instance"
+        Properties:
+        ImageId: !FindInMap
+            - RegionMap
+            - !Ref 'AWS::Region'
+            - HVM64
+        InstanceType: m1.small
+</code></pre>
+
+La plantilla de ejemplo contiene un recurso AWS::EC2::Instance cuya propiedad ImageId es establecida por la función FindInMap.
+
+MapName se establece en el mapa de interés, "RegionMap" en este ejemplo. TopLevelKey se establece en la región donde se crea el stack, que se determina utilizando el pseudoparámetro "AWS::Region". SecondLevelKey se establece en la arquitectura deseada, "HVM64" en este ejemplo.
+
+FindInMap devuelve la AMI asignada a FindInMap. Para una instancia HVM64 en us-east-1, FindInMap devolvería "ami-0ff8a91507f77f867".
+
+### Instancias dedicadas
+
+Las instancias dedicadas son instancias de Amazon EC2 que se ejecutan en una nube privada virtual (VPC) en hardware dedicado a un único cliente. Las Instancias Dedicadas que pertenecen a diferentes cuentas de AWS están físicamente aisladas a nivel de hardware, incluso si dichas cuentas están vinculadas a una cuenta de un único cliente. Sin embargo, las Instancias Dedicadas pueden compartir hardware con otras instancias de la misma cuenta de AWS que no sean Instancias Dedicadas.
+
+Un Host Dedicado también es un servidor físico dedicado para su uso. Con un Hosts dedicado, tiene visibilidad y control sobre cómo se colocan las instancias en el servidor.
+
+### ALB access logs
+
+Elastic Load Balancing proporciona logs de acceso que capturan información detallada sobre las peticiones enviadas a su Load Balancer. Cada logs contiene información como la hora a la que se recibió la petición, la dirección IP del cliente, las latencias, las rutas de petición y las respuestas del servidor. Puede utilizar estos logs de acceso para analizar patrones de tráfico y solucionar problemas. Los logs de acceso son una función opcional de Elastic Load Balancing que está desactivada de forma predeterminada.
+
+### X-Ray
+
+AWS X-Ray ayuda a los desarrolladores a analizar y depurar aplicaciones distribuidas de producción, como las creadas con una arquitectura de microservicios. Con X-Ray, puede comprender el desempeño de su aplicación y sus servicios subyacentes para identificar y solucionar la causa raíz de los problemas y errores de desempeño. X-Ray proporciona una vista de extremo a extremo de las peticiones a medida que viajan a través de su aplicación, y muestra un mapeo de los componentes subyacentes de su aplicación.
+
+Puede utilizar X-Ray para recopilar datos en todas las cuentas de AWS. El agente de X-Ray puede asumir un rol para publicar datos en una cuenta diferente de aquella en la que se está ejecutando. Esto le permite publicar datos de varios componentes de su aplicación en una cuenta central.
+
+### AWS::AccountId
+
+Con CloudFormation, puede crear una plantilla que describa todos los recursos de AWS que desee (como instancias de Amazon EC2 o instancias de base de datos de Amazon RDS), y AWS CloudFormation se encargará de aprovisionar y configurar dichos recursos por usted.
+
+Los pseudoparámetros son parámetros predefinidos por AWS CloudFormation. Usted no los declara en su plantilla. Utilícelos de la misma forma que lo haría con un parámetro, como argumento de la función Ref.
+
+AWS::AccountId devuelve el ID de cuenta de AWS de la cuenta en la que se está creando el stack.
+
+### AWS::NoValue
+
+Elimina la propiedad de recurso correspondiente cuando se especifica como valor de retorno en la función intrínseca Fn::If.
+
+### AWS::Region
+
+Devuelve un string que representa la región de AWS en la que se está creando el recurso que lo engloba, como us-west-2.
+
+### AWS::StackName
+
+Devuelve el nombre del stack especificado con el comando aws cloudformation create-stack, como "teststack".
+
+### AWS CloudFormation StackSets
+
+AWS CloudFormation StackSets amplía la capacidad de los stacks al permitirle crear, actualizar o eliminar stacks en varias cuentas y regiones de AWS con una sola operación. Utilizando una cuenta de administrador, puede definir y administrar una plantilla de AWS CloudFormation y utilizar la plantilla como base para aprovisionar stacks en cuentas de destino seleccionadas en regiones de AWS especificadas.
+
+Ejemplo: ***Configure una plantilla de AWS CloudFormation que defina los recursos de la prueba de carga. Aproveche el comando de la CLI de AWS create-stack-set para crear un conjunto de stacks en las regiones deseadas.***
+
+### Elastic Load Balancing soporta tres tipos de balanceadores de carga:
+
+Application Load Balancer
+
+Network Load Balancer
+
+Balanceadores de carga clásicos
+
+**Separe el tráfico público del privado** - Los nodos de un balanceador de carga orientado a Internet tienen direcciones IP públicas. Los Load Balancer dirigen las peticiones a sus destinos utilizando direcciones IP privadas. Por lo tanto, sus destinos no necesitan direcciones IP públicas para recibir peticiones de usuarios a través de Internet.
+
+**Construya un sistema de alta disponibilidad** - Elastic Load Balancing proporciona tolerancia a fallos para sus aplicaciones equilibrando automáticamente el tráfico entre los destinos -instancias de Amazon EC2, contenedores, direcciones IP y funciones de Lambda- en varias zonas de disponibilidad, al tiempo que garantiza que solo los destinos en buen estado reciben tráfico.
+
+### Desplegar la función con su asignación de memoria configurada al máximo
+
+Lambda asigna potencia de CPU en proporción a la cantidad de memoria configurada. La memoria es la cantidad de memoria disponible para su función Lambda en tiempo de ejecución. Puede aumentar o disminuir la memoria y la potencia de CPU asignada a su función utilizando la configuración de Memoria (MB). Para configurar la memoria de su función, establezca un valor entre 128 MB y 10.240 MB en incrementos de 1 MB. A 1.769 MB, una función tiene el equivalente de una vCPU (una vCPU-segundo de créditos por segundo).
+
+### Los valores de salida exportados en CloudFormation deben tener nombres únicos dentro de una misma región
+
+Con CloudFormation, puede crear una plantilla que describa todos los recursos de AWS que desee (como instancias de Amazon EC2 o instancias de base de datos de Amazon RDS), y AWS CloudFormation se encarga de aprovisionar y configurar dichos recursos por usted.
+
+Una plantilla de CloudFormation tiene una sección opcional Outputs que declara valores de salida que puede importar a otros stacks (para crear referencias entre stacks), devolver en respuesta (para describir llamadas a stacks) o ver en la consola de AWS CloudFormation. Por ejemplo, puede mostrar el nombre del bucket de S3 de un stack para que sea más fácil encontrarlo.
+
+Puede utilizar Exportar valores de salida para exportar el nombre de la salida de recursos para una referencia entre stacks. Para cada cuenta de AWS, los nombres de exportación deben ser únicos dentro de una región. En este caso, tendríamos un conflicto dentro de us-east-2.
+
+### Etapas
+
+Una etapa es una referencia lógica a un estado del ciclo de vida de su API (por ejemplo, "dev", "prod", "beta", "v2"). Las etapas de la API se identifican mediante el ID de la API y el nombre de la etapa. Puede utilizar una etapa para gestionar y optimizar un despliegue concreto. Por ejemplo, puede configurar ajustes de etapa para habilitar el almacenamiento en caché, personalizar la limitación de peticiones, configurar logs, definir variables de etapa o adjuntar una versión canaria para testear. Tras la implantación inicial, puede añadir más etapas y asociarlas a implantaciones existentes. Puede utilizar la consola de API Gateway para crear una nueva etapa, o puede elegir una etapa existente mientras despliega una API. En general, puede añadir una nueva etapa a un despliegue de API antes de volver a desplegar la API.
+
+### .ebextensions/<mysettings>.config
+
+Puede añadir archivos de configuración de AWS Elastic Beanstalk (.ebextensions) al código fuente de su aplicación web para configurar su entorno y personalizar los recursos de AWS que contiene. Los archivos de configuración son documentos con formato YAML o JSON con una extensión de archivo .config que se colocan en una carpeta denominada .ebextensions y se implementan en el paquete de código fuente de la aplicación.
+
+### KMS almacena la CMK, y recibe datos de los clientes, que cifra y devuelve
+
+Una clave maestra de cliente (CMK) es una representación lógica de una clave maestra. La CMK incluye metadatos, como el ID de la clave, la fecha de creación, la descripción y el estado de la clave. La CMK también contiene el material de la clave utilizado para cifrar y descifrar datos. Puede generar CMK en KMS, en un Cluster de AWS CloudHSM o importarlas desde su infraestructura de administración de claves.
+
+AWS KMS soporta CMK simétricas y asimétricas. Una CMK simétrica representa una clave de 256 bits que se utiliza para el cifrado y el descifrado. Una CMK asimétrica representa un par de claves RSA que se utiliza para cifrado y descifrado o firma y verificación (pero no ambos), o un par de claves de curva elíptica (ECC) que se utiliza para firma y verificación.
+
+AWS KMS soporta tres tipos de CMK: CMK administradas por el cliente, CMK administradas por AWS y CMK propiedad de AWS.
+
+### Utilice AWS CloudTrail para obtener un registro de las acciones realizadas por un usuario
+
+AWS CloudTrail proporciona un registro de las acciones realizadas por un usuario, rol o servicio de AWS en Systems Manager. Mediante la información recopilada por AWS CloudTrail, puede determinar la petición que se realizó a Systems Manager, la dirección IP desde la que se realizó la petición, quién realizó la petición, cuándo se realizó y detalles adicionales.
+
+### API PutRecords
+
+La matriz de registros de respuesta incluye registros procesados con éxito y registros procesados sin éxito. Kinesis Data Streams intenta procesar todos los registros de cada petición PutRecords. El fallo de un solo registro no detiene el procesamiento de los registros posteriores. Como resultado, PutRecords no garantiza el orden de los registros. Un registro procesado sin éxito incluye los valores ErrorCode y ErrorMessage. ErrorCode refleja el tipo de error y puede ser uno de los siguientes valores: ProvisionedThroughputExceededException" o "InternalFailure". ProvisionedThroughputExceededException" indica que la tasa de peticiones para el stream es demasiado alta, o que los datos solicitados son demasiado grandes para el throughput disponible. Reduzca la frecuencia o el tamaño de sus peticiones.
+
+Para abordar el caso de uso dado, puede aplicar estas mejores prácticas:
+
+Refuerce su stream para aumentar el número de fragmentos en el stream.
+
+Reduzca la frecuencia o el tamaño de sus peticiones.
+
+Distribuya las operaciones de lectura y escritura de la forma más uniforme posible entre todos los fragmentos de los flujos de datos.
+
+Utilice un mecanismo de reintento de error y de backoff exponencial.
+
+### credenciales de seguridad que sólo puede ser creada por el usuario root de la cuenta de AWS
+
+**Pares de claves de CloudFron**t - Los usuarios de IAM no pueden crear pares de claves de CloudFront. Debe iniciar sesión con credenciales de root para crear pares de claves.
+
+Para crear URL firmadas o Cookies firmadas, necesita un firmante. Un firmante es un grupo de claves de confianza que se crea en CloudFront o una cuenta de AWS que contiene un par de claves de CloudFront. AWS recomienda que utilice grupos de claves de confianza con URL firmadas y cookies firmadas en lugar de utilizar pares de claves de CloudFront.
+
+### Activar el almacenamiento en caché de API en API Gateway.
+
+API Gateway proporciona algunas estrategias para optimizar su API con el fin de mejorar la capacidad de respuesta, como el almacenamiento en caché de respuestas y la compresión de la carga útil. Puede habilitar el almacenamiento en caché de API en Amazon API Gateway para almacenar en caché las respuestas de su endpoint. Con el almacenamiento en caché, puede reducir el número de llamadas realizadas a su endpoint y también mejorar la latencia de las peticiones a su API.
+
+### Secciones plantilla YAML de CloudFormation
+
+**Sección 'Conditions' de la plantilla** - Esta sección opcional incluye condiciones que controlan si se crean determinados recursos o si se asigna un valor a determinadas propiedades de recursos durante la creación o actualización de stacks. Por ejemplo, podría crear condicionalmente un recurso que dependa de si el stack es para un entorno de producción o de test.
+
+**Sección 'Resources' de la plantilla** - Esta es la única sección obligatoria y especifica los recursos de la pila y sus propiedades, como una instancia de Amazon Elastic Compute Cloud o un bucket de Amazon Simple Storage Service. Puede hacer referencia a los recursos en las secciones Resources y Outputs de la plantilla.
+
+**Sección 'Parameters' de la plantilla** - Esta sección opcional es útil para pasar valores a la plantilla en tiempo de ejecución (al crear o actualizar un stack). Puede hacer referencia a los parámetros desde las secciones Recursos y Salidas de la plantilla.
+
+### entidades de AWS que pueden utilizar para implementar certificados de servidor SSL/TLS
+
+**AWS Certificate Manager** - AWS Certificate Manager (ACM) es la herramienta preferida para aprovisionar, administrar e implementar certificados de servidor. Con ACM puede solicitar un certificado o implementar un certificado existente de ACM o externo en los recursos de AWS. Los certificados proporcionados por ACM son gratuitos y se renuevan automáticamente. En una región con soporte, puede utilizar ACM para administrar certificados de servidor desde la consola o mediante programación.
+
+**IAM** - IAM se utiliza como administrador de certificados sólo cuando debe soportar conexiones HTTPS en una región que no es soportada por ACM. IAM cifra de forma segura sus claves privadas y almacena la versión cifrada en el almacenamiento de certificados SSL de IAM. IAM soporta la implementación de certificados de servidor en todas las regiones, pero debe obtener su certificado de un proveedor externo para utilizarlo con AWS. No puede cargar un certificado ACM en IAM. Además, no puede administrar sus certificados desde la consola de IAM.
+
+### Registro CNAME
+
+Un registro CNAME mapea las consultas DNS para el nombre del registro actual, como acme.example.com, a otro dominio (example.com o example.net) o subdominio (acme.example.com o zenith.example.org).
+
+Los registros CNAME pueden utilizarse para mapear un nombre de dominio a otro. Aunque debe tener en cuenta que el protocolo DNS no permite crear un registro CNAME para el nodo superior de un espacio de nombres DNS, también conocido como vértice de la Zona. Por ejemplo, si registra el nombre DNS ejemplo.com, el vértice de zona es ejemplo.com. No puede crear un registro CNAME para example.com, pero puede crear registros CNAME para <www.example.com>, newproduct.example.com, etc.
+
+### AWS requiere aproximadamente 5 semanas de datos de uso para generar previsiones de presupuesto
+
+WS requiere aproximadamente 5 semanas de datos de uso para generar previsiones de presupuesto. Si configura un presupuesto para que emita una alerta basada en un importe previsto, esta alerta de presupuesto no se activará hasta que disponga de suficiente información histórica de uso.
+
+### Función Access Advisor en consola IAM
+
+Para ayudar a identificar los roles no utilizados, IAM informa de la marca de tiempo de último uso que representa cuándo se utilizó un rol por última vez para realizar una petición de AWS. Su equipo de seguridad puede utilizar esta información para identificar, analizar y, a continuación, eliminar con confianza los roles no utilizados. Esto ayuda a mejorar la postura de seguridad de sus entornos de AWS. Además, al eliminar los roles no utilizados, puede simplificar sus esfuerzos de monitorización y auditoría al centrarse únicamente en los roles que están en uso.
+
+### Habilitar los tiempos de espera de CodeBuild
+
+Una compilación representa un conjunto de acciones realizadas por AWS CodeBuild para crear artefactos de salida (por ejemplo, un archivo JAR) basados en un conjunto de artefactos de entrada (por ejemplo, una colección de archivos de clases Java).
+
+Las siguientes reglas se aplican cuando se ejecutan varias compilaciones:
+
+Siempre que sea posible, las compilaciones se ejecutan simultáneamente. El número máximo de compilaciones que pueden ejecutarse simultáneamente puede variar.
+
+Las compilaciones se ponen en cola si el número de compilaciones que se ejecutan simultáneamente alcanza su límite. El número máximo de construcciones en una cola es cinco veces el límite de construcciones simultáneas.
+
+Una compilación en cola que no se inicia tras el número de minutos especificado en su valor de tiempo de espera se elimina de la cola. El tiempo de espera por defecto es de ocho horas. Puede anular el tiempo de espera de la cola de construcción con un valor entre cinco minutos y ocho horas cuando ejecute su construcción.
+
+Al establecer la configuración del tiempo de espera, el proceso de compilación finalizará automáticamente una vez transcurrido el tiempo de espera configurado.
+
+### CodeDeploy
+
+AWS CodeDeploy es un servicio de implementación que automatiza las implementaciones de aplicaciones en instancias de Amazon EC2, instancias on-premise o funciones de Lambda sin servidor. AWS CodeBuild es un servicio de integración continua totalmente administrado que compila código fuente, ejecuta pruebas y produce paquetes de software listos para implementar.
+
+El tipo de implementación Blue/Green utiliza el modelo de implementación Blue/Green controlado por CodeDeploy. Este tipo de despliegue permite verificar un nuevo despliegue de servicio antes de enviarle tráfico de producción.
+
+### Presentar el identificador único de cada petición en una tabla de DynamoDB. Cambie la función de Lambda para comprobar la tabla en busca del identificador antes de procesar la petición.
+
+DynamoDB es una base de datos NoSQL de valores clave, sin servidor y totalmente gestionada, diseñada para ejecutar aplicaciones de alto rendimiento a cualquier escala. DynamoDB ofrece seguridad integrada, copias de seguridad continuas, replicación multirregión automatizada, almacenamiento en caché en memoria y herramientas de importación y exportación de datos. Las funciones de copia de seguridad y restauración bajo demanda permiten crear copias de seguridad completas de DynamoDB. La recuperación puntual (PITR) ayuda a proteger las tablas de DynamoDB de operaciones accidentales de escritura o eliminación. PITR proporciona copias de seguridad continuas de los datos de su tabla DynamoDB, y puede restaurar esa tabla a cualquier punto en el tiempo hasta el segundo durante los 35 días anteriores.
+
+Estas características garantizan que no haya pérdida de datos para la aplicación, cumpliendo así un requisito clave para el caso de uso dado. La solución también debe ser capaz de abordar cualquier petición duplicada sin incoherencias, por lo que la función Lambda debe cambiarse para inspeccionar la tabla para el identificador dado y procesar la petición solo si el identificador es único.
+
+### Secrets Manager
+
+AWS Secrets Manager le permite rotar, gestionar y recuperar fácilmente credenciales de bases de datos, claves API y otros secretos a lo largo de su ciclo de vida. Los usuarios y las aplicaciones recuperan los secretos con una llamada a las API de Secrets Manager, lo que elimina la necesidad de codificar información confidencial en texto sin formato. Secrets Manager ofrece rotación de secretos con integración incorporada para Amazon RDS, Amazon Redshift y Amazon DocumentDB.
