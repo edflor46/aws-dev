@@ -591,9 +591,19 @@ Al establecer la configuración del tiempo de espera, el proceso de compilación
 
 AWS CodeDeploy es un servicio de implementación que automatiza las implementaciones de aplicaciones en instancias de Amazon EC2, instancias on-premise o funciones de Lambda sin servidor. AWS CodeBuild es un servicio de integración continua totalmente administrado que compila código fuente, ejecuta pruebas y produce paquetes de software listos para implementar.
 
+WS CodeDeploy es un servicio de "implementación" totalmente administrado que automatiza las implementaciones de software en una variedad de servicios informáticos como Amazon EC2, AWS Fargate, AWS Lambda y sus servidores on-premise. AWS CodeDeploy le facilita el lanzamiento rápido de nuevas características, le ayuda a evitar el tiempo de inactividad durante la implementación de aplicaciones y maneja la complejidad de actualizar sus aplicaciones. Esta es la opción correcta para el caso de uso actual.
+
 El tipo de implementación Blue/Green utiliza el modelo de implementación Blue/Green controlado por CodeDeploy. Este tipo de despliegue permite verificar un nuevo despliegue de servicio antes de enviarle tráfico de producción.
 
-### Presentar el identificador único de cada petición en una tabla de DynamoDB. Cambie la función de Lambda para comprobar la tabla en busca del identificador antes de procesar la petición.
+### AWS CodePipeline
+
+AWS CodePipeline es un servicio de "entrega continua" totalmente administrado que le ayuda a automatizar sus canalizaciones de lanzamiento para actualizaciones rápidas y fiables de aplicaciones e infraestructuras. CodePipeline automatiza las fases de creación, test e implementación de su proceso de lanzamiento cada vez que se produce un cambio en el código, en función del modelo de lanzamiento que defina. Esto le permite ofrecer funciones y actualizaciones de forma rápida y fiable. Mientras que CodeDeploy es un servicio de despliegue, CodePipeline es un servicio de entrega continua.
+
+### AWS CodeBuild
+
+AWS CodeBuild es un servicio de integración continua totalmente administrado que compila código fuente, ejecuta pruebas y produce paquetes de software listos para implementarse. Con CodeBuild, no necesita aprovisionar, administrar ni escalar sus propios servidores de creación. CodeBuild se escala de forma continua y procesa varias compilaciones simultáneamente, por lo que sus compilaciones no se quedan esperando en una cola.
+
+### Presentar el identificador único de cada petición en una tabla de DynamoDB. Cambie la función de Lambda para comprobar la tabla en busca del identificador antes de procesar la petición
 
 DynamoDB es una base de datos NoSQL de valores clave, sin servidor y totalmente gestionada, diseñada para ejecutar aplicaciones de alto rendimiento a cualquier escala. DynamoDB ofrece seguridad integrada, copias de seguridad continuas, replicación multirregión automatizada, almacenamiento en caché en memoria y herramientas de importación y exportación de datos. Las funciones de copia de seguridad y restauración bajo demanda permiten crear copias de seguridad completas de DynamoDB. La recuperación puntual (PITR) ayuda a proteger las tablas de DynamoDB de operaciones accidentales de escritura o eliminación. PITR proporciona copias de seguridad continuas de los datos de su tabla DynamoDB, y puede restaurar esa tabla a cualquier punto en el tiempo hasta el segundo durante los 35 días anteriores.
 
@@ -602,3 +612,271 @@ Estas características garantizan que no haya pérdida de datos para la aplicaci
 ### Secrets Manager
 
 AWS Secrets Manager le permite rotar, gestionar y recuperar fácilmente credenciales de bases de datos, claves API y otros secretos a lo largo de su ciclo de vida. Los usuarios y las aplicaciones recuperan los secretos con una llamada a las API de Secrets Manager, lo que elimina la necesidad de codificar información confidencial en texto sin formato. Secrets Manager ofrece rotación de secretos con integración incorporada para Amazon RDS, Amazon Redshift y Amazon DocumentDB.
+
+### Utilizar la API TransactWriteItems de DynamoDB Transactions
+
+Con las transacciones de Amazon DynamoDB, puede agrupar varias acciones y enviarlas como una única operación de todo o nada TransactWriteItems o TransactGetItems.
+
+TransactWriteItems" es una operación de escritura síncrona e idempotente que agrupa hasta 25 acciones de escritura en una única operación "todo o nada". Estas acciones pueden tener como destino hasta 25 elementos distintos en una o varias tablas de DynamoDB dentro de la misma cuenta de AWS y en la misma región. El tamaño agregado de los elementos de la transacción no puede superar los 4 MB. Las acciones se completan de forma atómica, de modo que o todas se ejecutan correctamente o ninguna lo hace.
+
+Puede incluir opcionalmente un token de cliente cuando realice una llamada a TransactWriteItems para asegurarse de que la petición es idempotente. Hacer que sus transacciones sean idempotentes ayuda a prevenir errores de aplicación si la misma operación se envía varias veces debido a un tiempo de espera de la conexión u otro problema de conectividad.
+
+### Utilizar colas de retardo para posponer la entrega de nuevos mensajes a la cola durante unos segundos
+
+Las colas de retardo te permiten posponer la entrega de nuevos mensajes a una cola durante varios segundos, por ejemplo, cuando tu aplicación de consumo necesita tiempo adicional para procesar los mensajes. Si creas una cola de retardo, los mensajes que envíes a la cola permanecerán invisibles para los consumidores durante el periodo de retardo. El retardo por defecto (mínimo) para una cola es de 0 segundos. El máximo es de 15 minutos.
+
+### Utilizar Cognito User Pools para facilitar el registro y la administración de usuarios para la aplicación móvil
+
+Amazon Cognito proporciona autenticación, autorización y gestión de usuarios para sus aplicaciones web y móviles. Tus usuarios pueden iniciar sesión directamente con un nombre de usuario y una contraseña, o a través de terceros como Facebook, Amazon, Google o Apple.
+
+### Habilitar la integración de S3 y CloudWatch Logs
+
+AWS CodeBuild monitoriza las funciones en su nombre e informa de las métricas a través de Amazon CloudWatch. Estas métricas incluyen el número de compilaciones totales, las compilaciones fallidas, las compilaciones correctas y la duración de las compilaciones. Puede monitorizar sus compilaciones a dos niveles: Nivel de proyecto y nivel de cuenta de AWS. Puede exportar datos de logs de sus grupos de logs a un bucket de Amazon S3 y utilizar estos datos en procesamientos y análisis personalizados, o para cargarlos en otros sistemas.
+
+### Implementar una cola de mensajes fallidos
+
+Amazon SQS soporta las colas de mensajes fallidos, a las que pueden dirigirse otras colas (colas de origen) para los mensajes que no se pueden procesar (consumir) correctamente. Las colas de mensajes fallidos son útiles para depurar la aplicación o el sistema de mensajería, ya que permiten aislar los mensajes problemáticos para determinar por qué no se procesan correctamente. Amazon SQS no crea la cola de mensajes fallidos automáticamente. Primero debe crear la cola antes de utilizarla como cola de mensajes fallidos.
+
+### sin límite
+
+No hay límites de mensajes para almacenar en SQS, pero los "mensajes en vuelo" sí tienen límites. Asegúrese de eliminar los mensajes después de haberlos procesado. Puede haber un máximo aproximado de 120.000 mensajes inflight (recibidos de una cola por un consumidor, pero aún no borrados de la cola).
+
+### dynamodb:UpdateItem, dynamodb:GetItem
+
+Con las transacciones de Amazon DynamoDB, puede agrupar varias acciones y enviarlas como una única operación TransactWriteItems o TransactGetItems de todo o nada.
+
+Puede utilizar AWS Identity and Access Management (IAM) para restringir las acciones que pueden realizar las operaciones transaccionales en Amazon DynamoDB. Los permisos para las acciones Put, Update, Delete y Get se rigen por los permisos utilizados para las operaciones PutItem, UpdateItem, DeleteItem y GetItem subyacentes. Para la acción ConditionCheck, puede utilizar el permiso dynamodb:ConditionCheck en las políticas de IAM.
+
+La acción UpdateItem de las API de DynamoDB edita los atributos de un elemento existente o añade un nuevo elemento a la tabla si aún no existe. Puede poner, eliminar o añadir valores de atributos. También puede realizar una actualización condicional en un elemento existente (insertar un nuevo par nombre-valor de atributo si no existe, o reemplazar un par nombre-valor existente si tiene ciertos valores de atributo esperados).
+
+No es necesario incluir la acción dynamodb:PutItem para este caso de uso.
+
+Por lo tanto, la política IAM debe incluir permisos para obtener y actualizar el elemento en la tabla de DynamoDB.
+
+### Volumen de 200 GiB con 15000 IOPS
+
+Esta configuración no es válida. El ratio máximo de IOPS provisionadas respecto al tamaño de volumen solicitado (en GiB) es de 50:1. Por lo tanto, para un volumen de 200 GiB, las IOPS máximas posibles son 200*50 = 10000 IOPS.
+
+### Configurar la aplicación para obtener las variables y las credenciales del almacén de parámetros de AWS Systems Manager aprovechando las rutas jerárquicas únicas del almacén de parámetros para cada variable de cada entorno
+
+Los almacenes de parámetros son una capacidad de AWS Systems Manager que proporciona un almacenamiento seguro y jerárquico para la administración de datos de configuración y la administración de secretos. Puede almacenar datos como contraseñas, Strings de bases de datos, ID de imágenes de máquina de Amazon (AMI) y códigos de licencia como valores de parámetros. Puede almacenar valores como texto sin formato o datos cifrados. Puede hacer referencia a los parámetros de Systems Manager en sus scripts, comandos, documentos SSM y flujos de trabajo de configuración y automatización utilizando el nombre único que especificó al crear el parámetro.
+
+Gestionar docenas o cientos de parámetros como una lista plana lleva mucho tiempo y es propenso a errores. También puede ser difícil identificar el parámetro correcto para una tarea. Esto significa que podría utilizar accidentalmente el parámetro equivocado, o podría crear múltiples parámetros que utilizan los mismos datos de configuración.
+
+Las jerarquías de parámetros ayudan a organizar y gestionar los parámetros. Una jerarquía es un nombre de parámetro que incluye una ruta que se define utilizando barras inclinadas (/).
+
+### Amazon Kinesis Data Firehose
+
+Es un servicio totalmente administrado para entregar datos de streaming en tiempo real a destinos como Amazon Simple Storage Service (Amazon S3), Amazon Redshift, Amazon Elasticsearch Service (Amazon ES) y Splunk. Con Kinesis Data Firehose, no necesita escribir aplicaciones ni gestionar recursos. Usted configura sus productores de datos para que envíen datos a Kinesis Data Firehose, y éste los entrega automáticamente al destino que haya especificado.
+
+### Amazon ElastiCache con Amazon S3 como backup
+
+Amazon ElastiCache es un almacén de datos en memoria totalmente gestionado, compatible con Redis o Memcached. ElastiCache NO es un destino soportado por Amazon Kinesis Data Firehose.
+
+### CloudFormation actualmente soporta los siguientes tipos de parámetros
+
+<pre>
+    <code>
+        String – Una cadena literal
+        Number – Un entero o flotante
+        List< Number> – Una matriz de números enteros o flotantes
+        CommaDelimitedList – Una matriz de Strings literales separadas por comas
+        AWS::EC2::KeyPair::KeyName – Un nombre de par de claves de Amazon EC2
+        AWS::EC2::SecurityGroup::Id – Un ID de grupo de seguridad
+        AWS::EC2::Subnet::Id – Un ID de subred
+        AWS::EC2::VPC::Id – Un ID de VPC
+        List<AWS::EC2::VPC::Id> – Una matriz de VPC IDs
+        List<AWS::EC2::SecurityGroup::Id> – Una matriz de IDs de grupos de seguridad
+        List<AWS::EC2::Subnet::Id> – Una matriz de IDs de subred
+    </code>
+</pre>
+
+### Utilizar la opción --dry-run de la CLI de AWS
+
+La opción --dry-run comprueba si tiene los permisos necesarios para la acción, sin realizar realmente la petición, y proporciona una respuesta de error. Si dispone de los permisos necesarios, la respuesta de error es DryRunOperation; de lo contrario, es UnauthorizedOperation.
+
+### Escrituras condicionales
+
+DynamoDB soporta opcionalmente escrituras condicionales para operaciones de escritura (PutItem, UpdateItem, DeleteItem). Una escritura condicional sólo tiene éxito si los atributos del elemento cumplen una o más condiciones esperadas. En caso contrario, devuelve un error.
+
+Por ejemplo, puede que desee que una operación PutItem tenga éxito sólo si no hay ya un elemento con la misma clave primaria. O impedir que una operación UpdateItem modifique un elemento si uno de sus atributos tiene un valor determinado. Las escrituras condicionales son útiles cuando varios usuarios intentan modificar el mismo elemento. Esta es la opción correcta para el escenario actual.
+
+### Utilizar las API de lectura y escritura transaccionales de DynamoDB en los elementos de la tabla como una operación única de todo o nada.
+
+Puede utilizar las transacciones de DynamoDB para realizar cambios coordinados de todo o nada en varios elementos, tanto dentro de las tablas como entre ellas. Las transacciones proporcionan atomicidad, consistencia, aislamiento y durabilidad (ACID) en DynamoDB, ayudándole a mantener la corrección de los datos en sus aplicaciones.
+
+### Completar ambas operaciones en RDS MySQL en un único bloque de transacciones
+
+Amazon Relational Database Service (Amazon RDS) facilita la configuración, el funcionamiento y el escalado de una base de datos relacional con soporte para transacciones en el Cloud. Una base de datos relacional es una colección de elementos de datos con relaciones predefinidas entre ellos. RDS soporta las aplicaciones de bases de datos más exigentes. Puede elegir entre dos opciones de almacenamiento respaldado por SSD: una optimizada para aplicaciones de procesamiento de transacciones en línea (OLTP) de alto rendimiento, y la otra para uso general rentable.
+
+### Definir un archivo appspec.yml en el directorio raíz
+
+Un archivo AppSpec debe ser un archivo con formato YAML llamado appspec.yml y debe colocarse en la raíz de la estructura de directorios del código fuente de una aplicación.
+
+El archivo AppSpec se utiliza para:
+
+Mapear los archivos fuente en la revisión de su aplicación a sus destinos en la instancia.
+
+Especificar permisos personalizados para los archivos desplegados.
+
+Especificar los scripts que se ejecutarán en cada instancia en las distintas fases del proceso de despliegue.
+
+Durante el despliegue, el agente CodeDeploy busca el nombre del evento actual en la sección hooks del archivo AppSpec. Si no encuentra el evento, el agente de CodeDeploy pasa al siguiente paso. Si se encuentra el evento, el agente de CodeDeploy recupera la lista de scripts a ejecutar. Los scripts se ejecutan secuencialmente, en el orden en que aparecen en el archivo. El estado de cada script se registra en el archivo logs del agente de CodeDeploy en la instancia.
+
+Si un script se ejecuta correctamente, devuelve un código de salida de 0 (cero). Si el agente de CodeDeploy instalado en el sistema operativo no coincide con lo que aparece en el archivo AppSpec, el despliegue falla.
+
+### Un grupo de usuarios es un directorio de usuarios en Amazon Cognito
+
+Con un grupo de usuarios, sus usuarios pueden iniciar sesión en su aplicación web o móvil a través de Amazon Cognito. Sus usuarios también pueden iniciar sesión a través de proveedores de identidad social como Google, Facebook, Amazon o Apple, y proveedores de identidad SAML. Tanto si sus usuarios inician sesión directamente como a través de un tercero, todos los miembros del grupo de usuarios tienen un perfil de directorio al que puede acceder a través de un kit de desarrollo de software (SDK).
+
+Los grupos de usuarios proporcionan:
+
+Servicios de registro e inicio de sesión.
+
+Una interfaz de usuario web integrada y personalizable para registrar a los usuarios.
+
+Inicio de sesión social con Facebook, Google, inicio de sesión con Amazon e inicio de sesión con Apple, así como inicio de sesión con proveedores de identidad SAML de su grupo de usuarios.
+
+Gestión del directorio de usuarios y perfiles de usuario.
+
+Funciones de seguridad como la autenticación multifactor (MFA), comprobaciones de credenciales comprometidas, protección de toma de control de cuentas y verificación de teléfono y correo electrónico.
+
+Flujos de trabajo personalizados y migración de usuarios a través de disparadores de AWS Lambda.
+
+Para utilizar un grupo de usuarios de Amazon Cognito con su API de Amazon API Gateway, primero debe crear un autorizador del tipo COGNITO_USER_POOLS y, a continuación, configurar un método de API para utilizar ese autorizador. Una vez desplegada la API, el cliente debe primero registrar al usuario en el grupo de usuarios, obtener un token de identidad o acceso para el usuario y, a continuación, llamar al método API con uno de los tokens, que normalmente se establecen en el encabezado Authorization de la petición.
+
+Para el caso de uso dado, puede utilizar un grupo de usuarios de Cognito para administrar cuentas de usuario y configurar un autorizador de grupo de usuarios de Amazon Cognito en API Gateway para controlar el acceso a la API. Debe utilizar una función Lambda para almacenar las imágenes reales en S3 y los metadatos de las imágenes en DynamoDB. Por último, puede obtener las imágenes mediante la función Lambda que aprovecha los metadatos almacenados en DynamoDB.
+
+### VPC Flow Logs
+
+VPC Flow Logs es una característica que le permite capturar información sobre el tráfico IP que entra y sale de las interfaces de red de su VPC. Los datos de los logs de flujo se pueden publicar en Amazon CloudWatch Logs o Amazon S3. Una vez creado un logs de flujo, puede recuperar y ver sus datos en el destino elegido.
+
+Puede crear un logs de flujo para una VPC, una subred o una interfaz de red. Si crea un logs de flujo para una subred o VPC, se supervisa cada interfaz de red de esa subred o VPC.
+
+Los datos del registro de flujo para una interfaz de red supervisada se registran como logs de flujo, que son eventos de registro que constan de campos que describen el flujo de tráfico.
+
+### Cognito Sync
+
+Amazon Cognito Sync es un servicio de AWS y una biblioteca de clientes que permite la sincronización entre dispositivos de los datos de usuario relacionados con la aplicación. Puede utilizarlo para sincronizar los datos de perfil de usuario entre dispositivos móviles y la web sin necesidad de su propio backend. 
+
+### La tabla de enrutamiento en la subred de la instancia debe tener una ruta a un Gateway de Internet
+
+Una tabla de enrutamiento contiene un conjunto de reglas, llamadas rutas, que se utilizan para determinar hacia dónde se dirige el tráfico de red desde su subred o Gateway. La tabla de enrutamiento en la subred de la instancia debería tener una ruta definida hacia el Gateway de Internet.
+
+### Generar una clave SSH pública a partir de una clave SSH privada. A continuación, importe la clave en cada una de sus regiones de AWS.
+
+Esta es la forma correcta de reutilizar claves SSH en tus regiones AWS:
+
+1. Genere un archivo de clave SSH pública (.pub) a partir del archivo de clave SSH privada (.pem).
+1. Establezca la región de AWS a la que desea importar.
+1. Importe la clave SSH pública a la nueva región.
+
+### S3 Access Logs está apuntando al mismo bucket y es responsable del crecimiento sustancial del tamaño del bucket
+
+Cuando su bucket de origen y su bucket de destino son el mismo bucket, se crean logs adicionales para los logs que se escriben en el bucket. Los logs adicionales sobre logs pueden hacer más difícil encontrar el log que está buscando. Esta configuración aumentaría drásticamente el tamaño del bucket de S3.
+
+### 5,3 TiB
+
+Los volúmenes SSD de propósito general (gp2) ofrecen un almacenamiento rentable ideal para una amplia gama de cargas de trabajo. Estos volúmenes ofrecen latencias de un milisegundo y la capacidad de alcanzar los 3.000 IOPS durante largos periodos de tiempo. Entre un mínimo de 100 IOPS (a 33,33 GiB y menos) y un máximo de 16.000 IOPS (a 5.334 GiB y más), el rendimiento básico se escala linealmente a 3 IOPS por GiB de tamaño de volumen.
+
+### Para implementar una imagen de contenedor en Lambda, la imagen de contenedor debe implementar la API de tiempo de ejecución de Lambda
+
+Para implementar una imagen de contenedor en Lambda, la imagen de contenedor debe implementar la API de tiempo de ejecución de Lambda. Los clientes de interfaz de tiempo de ejecución de código abierto de AWS implementan la API. Puede añadir un cliente de interfaz de tiempo de ejecución a su imagen base preferida para hacerla compatible con Lambda.
+
+### Debe crear la función Lambda desde la misma cuenta que el registro de contenedores en Amazon ECR
+
+Puede empaquetar el código de su función Lambda y las dependencias como una imagen de contenedor, utilizando herramientas como la CLI de Docker. A continuación, puede cargar la imagen en su registro de contenedores alojado en Amazon Elastic Container Registry (Amazon ECR). Tenga en cuenta que debe crear la función Lambda desde la misma cuenta que el registro de contenedores en Amazon ECR.
+
+### Agregar las dependencias en el código fuente durante la etapa de compilación de CodeBuild.
+
+AWS CodeBuild es un servicio de creación totalmente administrado. No hay servidores que aprovisionar y escalar, ni software que instalar, configurar y operar.
+
+Un proceso típico de creación de aplicaciones incluye fases como la preparación del entorno, la actualización de la configuración, la descarga de dependencias, la ejecución de pruebas unitarias y, por último, el empaquetado del artefacto creado.
+
+La descarga de dependencias es una fase crítica del proceso de compilación. El tamaño de estos archivos dependientes puede oscilar entre unos pocos KB y varios MB. Dado que la mayoría de los archivos dependientes no cambian con frecuencia entre compilaciones, puedes reducir notablemente el tiempo de compilación almacenando en caché las dependencias.
+
+Esto permitirá que el paquete de código que se despliegue en Elastic Beanstalk contenga tanto las dependencias como el código, acelerando así el tiempo de despliegue en Elastic Beanstalk.
+
+### Utilizar cifrado de sobre y hacer referencia a los datos como archivo dentro del código
+
+Aunque AWS KMS soporta el envío de datos de hasta 4 KB para ser cifrados directamente, el cifrado de sobres puede ofrecer importantes ventajas de rendimiento. Cuando cifra datos directamente con AWS KMS, estos deben transferirse a través de la red. El cifrado de sobres reduce la carga de la red, ya que sólo la petición y la entrega de la clave de datos, mucho más pequeña, van por la red. La clave de datos se utiliza localmente en su aplicación o servicio de AWS de cifrado, lo que evita la necesidad de enviar todo el bloque de datos a AWS KMS y sufrir latencia de red.
+
+Las variables de entorno de AWS Lambda pueden tener un tamaño máximo de 4 KB. Además, la API directa 'Encrypt' de KMS también tiene un límite máximo de 4 KB para la carga útil de datos. Para cifrar 1 MB, es necesario utilizar el SDK de cifrado y empaquetar el archivo cifrado con la función lambda.
+
+### Redistribuir la API en un escenario existente o en un escenario nuevo
+
+Después de crear su API, debe desplegarla para que sus usuarios puedan llamarla. Para desplegar una API, debe crear un despliegue de API y asociarlo a una etapa. Una etapa es una referencia lógica a un estado del ciclo de vida de su API (por ejemplo, dev, prod, beta, v2). Las etapas de la API se identifican mediante el ID de la API y el nombre de la etapa. Cada vez que actualice una API, debe volver a desplegarla en una etapa existente o en una nueva. La actualización de una API incluye la modificación de rutas, métodos, integraciones, autorizadores y cualquier otro elemento que no sea la configuración de la etapa.
+
+### Configurar el escalado automático de aplicaciones para gestionar la concurrencia aprovisionada de Lambda de forma programada
+
+La concurrencia es el número de peticiones que una función Lambda está atendiendo en un momento dado. Si se vuelve a invocar una función Lambda mientras se está procesando una petición, se asigna otra instancia, lo que aumenta la concurrencia de la función.
+
+Debido a un pico de tráfico, cuando las funciones Lambda se escalan, esto provoca que la parte de las peticiones que son servidas por nuevas instancias tengan una latencia mayor que el resto. Para permitir que su función escale sin fluctuaciones en la latencia, utilice concurrencia provisionada. Al asignar concurrencia provisionada antes de un aumento en las invocaciones, puede asegurarse de que todas las peticiones son servidas por instancias inicializadas con una latencia muy baja.
+
+Puede configurar el Autoescalado de Aplicaciones para gestionar la concurrencia provisionada de forma programada o en función de la utilización. Utilice el escalado programado para aumentar la concurrencia aprovisionada en previsión de picos de tráfico. Para aumentar la concurrencia aprovisionada automáticamente según sea necesario, utilice la API de Application Auto Scaling para registrar un destino y crear una política de escalado.
+
+### Utilizar la capacidad de backup bajo demanda de DynamoDB para escribir en Amazon S3 y descargar localmente
+
+Esta opción no es viable para el caso de uso dado. DynamoDB cuenta con dos métodos de copia de seguridad integrados (bajo demanda y recuperación puntual) que escriben en Amazon S3, pero no tendrá acceso a los buckets de S3 que se utilizan para estas copias de seguridad.
+
+### ValidateService
+
+ValidateService es el último evento del ciclo de vida del despliegue. Se utiliza para verificar que la implantación se ha realizado correctamente..
+
+### AfterInstall
+
+Puede utilizar este evento del ciclo de vida de la implantación para tareas como configurar la aplicación o cambiar los permisos de los archivos
+
+### ApplicationStart
+
+Normalmente se utiliza este evento del ciclo de vida de despliegue para reiniciar los servicios que se detuvieron durante ApplicationStop
+
+### AllowTraffic
+
+Durante este evento del ciclo de vida de despliegue, se permite el acceso del tráfico de Internet a las instancias después de un despliegue. Este evento está reservado para el agente de AWS CodeDeploy y no se puede utilizar para ejecutar scripts.
+
+### Crear un rol IAM con acceso a S3 en la Cuenta B y establecer la Cuenta A como entidad de confianza. Crear otro rol (perfil de instancia) en la Cuenta A y adjuntarlo a las instancias EC2 en la Cuenta A y añadir una política en línea a este rol para asumir el rol de la Cuenta B
+
+Puede dar a las instancias EC2 de una cuenta ("cuenta A") permisos para asumir un rol de otra cuenta ("cuenta B") para acceder a recursos como buckets S3. Debe crear un rol de IAM en la cuenta B y establecer la cuenta A como entidad de confianza. A continuación, adjunte una política a este rol de IAM para que delegue el acceso a Amazon S3.
+
+### API Gateway que expone la funcionalidad de Lambda
+
+Amazon API Gateway es un servicio totalmente administrado que facilita a los desarrolladores la creación, publicación, mantenimiento, monitorización y protección de API a cualquier escala. Las API actúan como la "puerta de entrada" para que las aplicaciones accedan a los datos, la lógica empresarial o la funcionalidad de sus servicios backend.
+
+### Instancias reservadas de zona
+
+Una instancia reservada de zona proporciona una reserva de capacidad en la Zona de disponibilidad especificada. Las reservas de capacidad le permiten reservar capacidad para sus instancias de Amazon EC2 en una zona de disponibilidad específica para cualquier duración. Esto le ofrece la posibilidad de crear y administrar Reservas de capacidad independientemente de los descuentos de facturación que ofrecen los Planes de ahorro o las Instancias reservadas regionales.
+
+### AWS Security Token Service (STS)
+
+AWS Security Token Service (AWS STS) es un servicio web que le permite solicitar credenciales temporales con privilegios limitados para usuarios de AWS Identity and Access Management (IAM) o para usuarios autenticados por usted (usuarios federados). Sin embargo, no está soportado por API Gateway.
+
+### Plantillas SAM
+
+Las plantillas del modelo de aplicación sin servidor (SAM) incluyen varias secciones principales. Transform y Resources son las únicas secciones obligatorias.
+
+### Compartir URLs pre-firmadas con recursos que necesitan acceso
+
+Todos los objetos por defecto son privados, con el propietario del objeto teniendo permiso para acceder a los objetos. Sin embargo, el propietario del objeto puede, opcionalmente, compartir objetos con otros mediante la creación de una URL prefirmada, utilizando sus propias credenciales de seguridad, para conceder permiso limitado en el tiempo para descargar los objetos. Al crear una URL prefirmada para su objeto, debe proporcionar sus credenciales de seguridad, especificar un nombre de bucket, una clave de objeto, especificar el método HTTP (GET para descargar el objeto) y la fecha y hora de caducidad. Las URL prefirmadas sólo son válidas durante el tiempo especificado.
+
+### Configurar endpoints de VPC para DynamoDB que proporcionen el acceso interno necesario sin utilizar Internet público
+
+Cuando crea un punto de enlace de VPC para DynamoDB, cualquier petición a un punto de enlace de DynamoDB dentro de la región (por ejemplo, dynamodb.us-west-2.amazonaws.com) se enruta a un punto de enlace privado de DynamoDB dentro de la red de Amazon. No es necesario que modifique sus aplicaciones que se ejecutan en instancias EC2 en su VPC. El nombre del endpoint sigue siendo el mismo, pero la ruta a DynamoDB permanece completamente dentro de la red de Amazon y no accede a la Internet pública. Utilice políticas de endpoint para controlar el acceso a DynamoDB. El tráfico entre su VPC y el servicio de AWS no sale de la red de Amazon.
+
+### Utilizar ConsistentRead = true al realizar la operación GetItem para cualquier elemento
+
+DynamoDB soporta lecturas consistentes y fuertemente consistentes.
+
+Lecturas eventualmente consistentes
+
+Al leer datos de una tabla de DynamoDB, es posible que la respuesta no refleje los resultados de una operación de escritura completada recientemente. La respuesta puede incluir algunos datos obsoletos. Si repite la petición de lectura al cabo de poco tiempo, la respuesta debería devolver los datos más recientes.
+
+Lecturas fuertemente consistentes
+
+Cuando se solicita una lectura fuertemente consistente, DynamoDB devuelve una respuesta con los datos más actualizados, reflejando las actualizaciones de todas las operaciones de escritura anteriores que tuvieron éxito.
+
+DynamoDB utiliza lecturas fuertemente consistentes de forma predeterminada. Las operaciones de lectura (como GetItem, Query y Scan) proporcionan un parámetro ConsistentRead. Si establece este parámetro en true, DynamoDB utiliza lecturas fuertemente consistentes durante la operación. En este caso de uso, para asegurarse de que la aplicación sólo utiliza el último valor actualizado de cualquier elemento, debe utilizar lecturas fuertemente consistentes estableciendo ConsistentRead = true para la operación GetItem.
+
+### Arreglar el rol IAM
+
+Cree un rol IAM con permisos de escritura y asígnelo a los recursos que ejecutan su aplicación. Puede utilizar AWS Identity and Access Management (IAM) para conceder permisos de X-Ray a los usuarios y recursos informáticos de su cuenta. Este debería ser uno de los primeros lugares por los que empezar comprobando que sus permisos están configurados correctamente antes de explorar otras opciones de solución de problemas.
