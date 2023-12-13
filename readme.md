@@ -26,6 +26,18 @@ Kinesis Data Streams es altamente personalizable y el más adecuado para los des
 
 Los repositorios de CodeCommit están basados en Git y soportan las funcionalidades básicas de Git como las credenciales Git. AWS recomienda utilizar un usuario IAM al trabajar con CodeCommit. Puede acceder a CodeCommit con otros tipos de identidad, pero los demás tipos de identidad están sujetos a limitaciones.
 
+### Cifrado del lado del servidor con claves maestras de cliente (CMK) almacenadas en AWS Key Management Service (SSE-KMS)
+
+Dispone de las siguientes opciones para proteger los datos en reposo en Amazon S3:
+
+Server-Side Encryption - Solicita a Amazon S3 que cifre tu objeto antes de guardarlo en discos en sus centros de datos y luego lo descifra cuando descargas los objetos.
+
+Cifrado del lado del cliente - Cifra los datos del lado del cliente y carga los datos cifrados en Amazon S3. En este caso, usted administra el proceso de cifrado, las claves de cifrado y las herramientas relacionadas.
+
+Cuando utiliza el cifrado del lado del servidor con AWS KMS (SSE-KMS), puede utilizar la CMK administrada por AWS predeterminada o puede especificar una CMK administrada por el cliente que ya haya creado.
+
+La creación de su propia CMK administrada por el cliente le proporciona más flexibilidad y control sobre la CMK. Por ejemplo, puede crear, rotar y desactivar CMK administradas por el cliente. También puede definir controles de acceso y auditar las CMK gestionadas por el cliente que utilice para proteger sus datos.
+
 ### SSE-S3 - Server-Side Encryption
 
 Al utilizar Server-Side Encryption with Amazon S3-Managed Keys (SSE-S3), cada objeto se cifra con una clave única que emplea un cifrado multifactor potente. Como salvaguarda adicional, cifra la propia clave con una clave maestra que rota periódicamente. El cifrado del lado del servidor de Amazon S3 utiliza uno de los cifrados por bloques más potentes disponibles, el Estándar de cifrado avanzado de 256 bits (AES-256), para cifrar sus datos.
@@ -65,6 +77,7 @@ El parámetro de nombre de cluster no ha sido actualizado en el fichero /etc/ecs
 ### Orden correcto de los pasos a seguir para crear una aplicación utilizando AWS CDK
 
 El flujo de trabajo de desarrollo estándar de AWS CDK es similar al flujo de trabajo que ya conoces como desarrollador. Hay algunos pasos adicionales:
+Configurar un parámetro con la lista de tipos de instancia EC2 como AllowedValues en la plantilla de CloudFormation.
 
 1. Cree la aplicación a partir de una plantilla proporcionada por AWS CDK - Cada aplicación de AWS CDK debe estar en su propio directorio, con sus propias dependencias de módulos locales. Crea un nuevo directorio para tu aplicación. Ahora inicializa la app usando el comando cdk init, especificando la plantilla deseada ("app") y el lenguaje de programación. El comando cdk init crea una serie de archivos y carpetas dentro del directorio de inicio creado para ayudarte a organizar el código fuente de tu app AWS CDK.
 
@@ -880,3 +893,253 @@ DynamoDB utiliza lecturas fuertemente consistentes de forma predeterminada. Las 
 ### Arreglar el rol IAM
 
 Cree un rol IAM con permisos de escritura y asígnelo a los recursos que ejecutan su aplicación. Puede utilizar AWS Identity and Access Management (IAM) para conceder permisos de X-Ray a los usuarios y recursos informáticos de su cuenta. Este debería ser uno de los primeros lugares por los que empezar comprobando que sus permisos están configurados correctamente antes de explorar otras opciones de solución de problemas.
+
+### Configurar un parámetro con la lista de tipos de instancia EC2 como AllowedValues en la plantilla de CloudFormation
+
+Puede utilizar la sección Parámetros para personalizar sus plantillas. Los parámetros te permiten introducir valores personalizados en tu plantilla cada vez que creas o actualizas un stack.
+
+AllowedValues se refiere a una matriz que contiene la lista de valores permitidos para el parámetro. Cuando se aplica a un parámetro de tipo String, el valor del parámetro debe ser uno de los valores permitidos. Cuando se aplica a un parámetro de tipo CommaDelimitedList, cada valor de la lista debe ser uno de los valores permitidos especificados.
+
+### Políticas de bucket, Políticas de Gestión de Identidad y Acceso (IAM). Autenticación por string de consulta, listas de control de acceso (ACL)
+
+Los clientes pueden utilizar cuatro mecanismos para controlar el acceso a los recursos de Amazon S3: Las políticas de Identity and Access Management (IAM), las políticas de bucket, las listas de control de acceso (ACL) y la autenticación de cadenas de consulta (Query String Authentication).
+
+### Entorno de trabajador dedicado
+
+Si su aplicación AWS Elastic Beanstalk realiza operaciones o flujos de trabajo que tardan mucho tiempo en completarse, puede descargar esas tareas a un entorno de trabajador dedicado. Desacoplar el front-end de su aplicación web de un proceso que realiza operaciones de bloqueo es una forma habitual de garantizar que su aplicación siga respondiendo bajo carga.
+
+Una tarea de larga duración es cualquier cosa que aumente sustancialmente el tiempo necesario para completar una petición, como el procesamiento de imágenes o vídeos, el envío de correos electrónicos o la generación de un archivo ZIP. Estas operaciones pueden tardar sólo uno o dos segundos en completarse, pero un retraso de unos segundos es mucho para una petición web que, de otro modo, se completaría en menos de 500 ms.
+
+### Habilitar el muestreo de X-Ray
+
+Para garantizar un rastreo eficiente y proporcionar una muestra representativa de las peticiones que atiende su aplicación, el SDK de X-Ray aplica un algoritmo de muestreo para determinar qué peticiones se rastrean. Por defecto, el SDK de X-Ray registra la primera petición cada segundo y el cinco por ciento de las peticiones adicionales. El muestreo de X-Ray se habilita directamente desde la consola de AWS, por lo que no es necesario cambiar el código de su aplicación.
+
+### Crear un CodePipeline para todo el flujo y añadir un paso de aprobación manual
+
+Puede añadir una acción de aprobación a una etapa de un pipeline CodePipeline en el punto en el que desea que el pipeline se detenga para que alguien pueda aprobar o rechazar manualmente la acción. Las acciones de aprobación no pueden añadirse a las etapas de origen. Las etapas de origen sólo pueden contener acciones de origen.
+
+### Utilizar las máquinas de estado de AWS Step Functions para orquestar el flujo de trabajo
+
+Step Functions se basan en los conceptos de tareas y máquinas de estado. Las máquinas de estado se definen mediante el lenguaje de estados de Amazon basado en JSON. Una máquina de estados se define por los estados que contiene y las relaciones entre ellos. Los estados son elementos de la máquina de estados. Los estados individuales pueden tomar decisiones basadas en sus entradas, realizar acciones y pasar salidas a otros estados. De este modo, una máquina de estados puede orquestar flujos de trabajo.
+
+### Los flujos de trabajo estándar en AWS Step Functions son adecuados para flujos de trabajo de larga ejecución, duraderos y auditables que también pueden soportar cualquier paso de aprobación humana
+
+Los flujos de trabajo estándar en AWS Step Functions son más adecuados para flujos de trabajo de larga ejecución, duraderos y auditables en los que la repetición de los pasos del flujo de trabajo es costosa (p. ej., reiniciar una transcodificación de medios de larga ejecución) o perjudicial (p. ej., cargar dos veces una tarjeta de crédito). Algunos ejemplos de cargas de trabajo son la formación y el despliegue de modelos de Machine Learning, la generación de informes, la facturación, el procesamiento de tarjetas de crédito y los procesos de realización de pedidos. Step Functions también soporta cualquier paso de aprobación humana.
+
+### Debe utilizar flujos de trabajo exprés para cargas de trabajo con altas tasas de eventos y corta duración
+
+Debe utilizar flujos de trabajo exprés para cargas de trabajo con altas tasas de eventos y corta duración. Los flujos de trabajo exprés soportan tasas de eventos superiores a 100.000 por segundo.
+
+### Instalar y ejecutar el demonio de X-Ray en los servidores on-premise para capturar y retransmitir los datos al servicio de X-Ray
+
+El demonio de AWS X-Ray es una aplicación de software que escucha el tráfico en el puerto UDP 2000, recopila datos de segmentos sin procesar y los transmite a la API de AWS X-Ray. El demonio funciona junto con los SDK de X-Ray de AWS y debe ejecutarse para que los datos enviados por los SDK puedan llegar al servicio de X-Ray.
+
+Para ejecutar el demonio de X-Ray localmente, en las instalaciones o en otros servicios de AWS, descárguelo, ejecútelo y, a continuación, dele permiso para cargar documentos de segmentos en X-Ray.
+
+### Tiene una partición caliente
+
+No siempre es posible distribuir uniformemente la actividad de lectura y escritura. Cuando el acceso a los datos está desequilibrado, una partición "caliente" puede recibir un mayor volumen de tráfico de lectura y escritura en comparación con otras particiones. Para adaptarse mejor a los patrones de acceso desiguales, la capacidad adaptable de DynamoDB permite a su aplicación seguir leyendo y escribiendo en las particiones activas sin ser estrangulada, siempre que el tráfico no supere la capacidad total aprovisionada de su tabla o la capacidad máxima de la partición.
+
+### Implementar Amazon ElastiCache Redis en modo Cluster
+
+Se puede aprovechar ElastiCache para Redis con el modo Cluster habilitado para mejorar la fiabilidad y la disponibilidad con pocos cambios en la carga de trabajo existente. El modo Cluster viene con el principal beneficio de escalado horizontal de su Cluster Redis, con casi cero impacto en el rendimiento del cluster.
+
+Al crear cargas de trabajo de producción, debe considerar el uso de una configuración con replicación, a menos que pueda recrear fácilmente sus datos. Activar el modo Cluster proporciona una serie de beneficios adicionales en el escalado de su cluster. En pocas palabras, permite aumentar o reducir el número de fragmentos (escalado horizontal) en lugar de aumentar o reducir el tipo de nodo (escalado vertical). Esto significa que Cluster-Mode puede escalar a cantidades muy grandes de almacenamiento (potencialmente cientos de terabytes) a través de hasta 90 fragmentos, mientras que un solo nodo sólo puede almacenar tantos datos en la memoria como el tipo de instancia tiene capacidad para. Configuración del Cluster Redis.
+
+### Utilizar el cliente extendido de SQS
+
+Para administrar mensajes grandes de Amazon Simple Queue Service (Amazon SQS), puede utilizar Amazon Simple Storage Service (Amazon S3) y la biblioteca de clientes extendidos de Amazon SQS para Java. Esto resulta especialmente útil para almacenar y consumir mensajes de hasta 2 GB. A menos que su aplicación requiera crear colas repetidamente y dejarlas inactivas o almacenar grandes cantidades de datos en sus colas, considere utilizar Amazon S3 para almacenar sus datos.
+
+### Motores de base de datos de AWS se puede configurar con la autenticación de base de datos de IAM
+
+**RDS MySQL** La autenticación de base de datos de IAM funciona con motores MySQL y PostgreSQL para Aurora, así como con motores MySQL, MariaDB y RDS PostgreSQL para RDS.
+
+**RDS PostGreSQL** La autenticación de bases de datos IAM funciona con motores MySQL y PostgreSQL para Aurora, así como con motores MySQL, MariaDB y RDS PostgreSQL para RDS.
+
+### Opción de despliegue Blue/Green
+
+Un despliegue Blue/Green se utiliza para actualizar sus aplicaciones minimizando las interrupciones causadas por los cambios de una nueva versión de la aplicación. CodeDeploy aprovisiona su nueva versión de aplicación junto con la versión antigua antes de redirigir su tráfico de producción. El comportamiento de su despliegue depende de la plataforma informática que utilice:
+
+1. AWS Lambda: El tráfico se desplaza de una versión de una función Lambda a una nueva versión de la misma función Lambda.
+1. Amazon ECS: El tráfico se desplaza de un conjunto de tareas en su servicio de Amazon ECS a un conjunto de tareas actualizado y de sustitución en el mismo servicio de Amazon ECS.
+1. EC2/On-Premises: El tráfico se desplaza de un conjunto de instancias en el entorno original a un conjunto de instancias de reemplazo.
+
+### Utilizar el almacén de parámetros de SSM
+
+El almacén de parámetros de AWS Systems Manager proporciona un almacenamiento seguro y jerárquico para la administración de datos de configuración y la administración de secretos. Puede almacenar datos como contraseñas, Strings de base de datos y códigos de licencia como valores de parámetros. Para el caso de uso dado, como el equipo de DevOps no desea volver a implementar la aplicación cada vez que haya cambios en la configuración, puede utilizar el almacén de parámetros de SSM para almacenar la configuración de forma externa.
+
+### Agente CodeDeploy
+
+El agente de CodeDeploy es un paquete de software que, una vez instalado y configurado en una instancia, permite utilizar dicha instancia en despliegues de CodeDeploy. El agente de CodeDeploy archiva las revisiones y los logs de las instancias. El agente de CodeDeploy limpia estos artefactos para conservar espacio en disco. Puede utilizar la opción :max_revisions: en el archivo de configuración del agente para especificar el número de revisiones de la aplicación a archivar introduciendo cualquier número entero positivo. CodeDeploy también archiva los logs de esas revisiones. Todas las demás se eliminan, excepto el fichero logs de la última implantación realizada con éxito.
+
+### Utilizar Amazon CloudFront
+
+Almacenar su contenido estático con S3 proporciona muchas ventajas. Sin embargo, para ayudar a optimizar el desempeño y la seguridad de su aplicación a la vez que administra los costos de manera eficaz, AWS recomienda que también configure Amazon CloudFront para que funcione con su bucket de S3 para servir y proteger el contenido. CloudFront es un servicio de red de entrega de contenido (CDN) que entrega contenido web estático y dinámico, streams de vídeo y API en todo el mundo, de forma segura y a escala. Por su diseño, la entrega de datos desde CloudFront puede ser más rentable que la entrega desde S3 directamente a sus usuarios.
+
+Al almacenar en caché su contenido en Edge Locations, CloudFront reduce la carga en su bucket de S3 y ayuda a garantizar una respuesta más rápida para sus usuarios cuando solicitan contenido. Además, la transferencia de datos para el contenido mediante CloudFront es a menudo más rentable que servir archivos directamente desde S3, y no hay cuota de transferencia de datos de S3 a CloudFront.
+
+Una característica de seguridad de CloudFront es Origin Access Identity (OAI), que restringe el acceso a un bucket de S3 y a su contenido solo a CloudFront y a las operaciones que realiza.
+
+### El tamaño total de todas las variables de entorno no debe superar los 4 KB. No hay límite en el número de variables.
+
+Una variable de entorno es un par de Strings que se almacenan en la configuración específica de la versión de una función. El tiempo de ejecución de Lambda pone las variables de entorno a disposición de tu código y establece variables de entorno adicionales que contienen información sobre la función y la petición de invocación. El tamaño total de todas las variables de entorno no supera los 4 KB. No hay límite definido en el número de variables que se pueden utilizar.
+
+### La función de Lambda no tiene permisos de IAM para escribir en DynamoDB
+
+Necesita utilizar una política basada en identidades que permita el acceso de lectura y escritura a una tabla específica de Amazon DynamoDB. Para utilizar esta política, adjúntela a un rol de servicio de Lambda. Un rol de servicio es un rol que crea en su cuenta para permitir que un servicio realice acciones en su nombre. Ese rol de servicio debe incluir AWS Lambda como principal en la política de confianza. A continuación, el rol se utiliza para conceder a una función de Lambda acceso a una tabla de DynamoDB. Al utilizar una política y un rol de IAM para controlar el acceso, no necesita incrustar credenciales en el código y puede controlar de forma estricta a qué servicios puede acceder la función de Lambda.
+
+### Utilizar el encabezado X-Forwarded-For
+
+El encabezado de petición X-Forwarded-For le ayuda a identificar la dirección IP de un cliente cuando utiliza un balanceador de carga HTTP o HTTPS. Dado que los balanceadores de carga interceptan el tráfico entre los clientes y los servidores, los logs de acceso al servidor sólo contienen la dirección IP del balanceador de carga. Para ver la dirección IP del cliente, utilice el encabezado de petición X-Forwarded-For. Elastic Load Balancing almacena la dirección IP del cliente en el encabezado de petición X-Forwarded-For y pasa el encabezado a su servidor.
+
+### Servicios que depende de CloudFormation para aprovisionar recursos
+
+1. **AWS Elastic Beanstalk** AWS Elastic Beanstalk es un servicio fácil de usar para implementar y escalar aplicaciones y servicios web desarrollados con Java, .NET, PHP, Node.js, Python, Ruby, Go y Docker en servidores conocidos como Apache, Nginx, Passenger e IIS. Elastic Beanstalk utiliza AWS CloudFormation para lanzar los recursos en su entorno y propagar los cambios de configuración.
+
+1. **Modelo de aplicación sin servidor de AWS (AWS SAM)** Utiliza la especificación de AWS SAM para definir su aplicación sin servidor. Las plantillas de AWS SAM son una extensión de las plantillas de AWS CloudFormation, con algunos componentes adicionales que facilitan el trabajo con ellas. AWS SAM necesita las plantillas de CloudFormation como base para su configuración.
+
+### Same-Region Replication (SRR) y Cross-Region Replication (CRR) se pueden configurar a nivel de bucket de S3, a nivel de prefijo compartido o a nivel de objeto mediante etiquetas de objeto de S3
+
+La replicación de Amazon S3 (CRR y SRR) se configura a nivel de bucket de S3, a nivel de prefijo compartido o a nivel de objeto mediante etiquetas de objeto de S3. Añada una configuración de replicación en su bucket de origen especificando un bucket de destino en la misma región de AWS o en otra diferente para la replicación.
+
+### Las acciones del ciclo de vida de S3 no se replican con la replicación de S3
+
+Con la replicación de S3 (CRR y SRR), puede establecer reglas de replicación para realizar copias de sus objetos en otra clase de almacenamiento, en la misma región o en una diferente. Las acciones del ciclo de vida no se replican, y si desea que se aplique la misma configuración del ciclo de vida a los buckets de origen y de destino, habilite la misma configuración del ciclo de vida en ambos.
+
+### Crear una métrica personalizada de alta resolución y enviar los datos mediante una secuencia de comandos activada cada 10 segundos
+
+Mediante la métrica personalizada de alta resolución, sus aplicaciones pueden publicar métricas en CloudWatch con una resolución de 1 segundo. Puede ver las métricas desplazarse por su pantalla segundos después de que se publiquen y puede configurar alarmas de CloudWatch de alta resolución que evalúen con una frecuencia de hasta 10 segundos. Puede alertar con Alarmas de Alta Resolución, tan frecuentemente como periodos de 10 segundos. Las alarmas de alta resolución le permiten reaccionar y tomar medidas más rápidamente y soportan las mismas acciones disponibles hoy en día con las alarmas estándar de 1 minuto.
+
+### Aumentar la capacidad mínima de instancia del Auto Scaling Group a 2.
+
+El tamaño del grupo de Auto Scaling se configura estableciendo la capacidad mínima, máxima y deseada. La capacidad mínima y máxima son necesarias para crear un grupo de Auto Scaling, mientras que la capacidad deseada es opcional. Si no se define la capacidad deseada por adelantado, se utilizará por defecto la capacidad mínima.
+
+Dado que se definió una capacidad mínima de 1, sólo se lanzó una instancia en una AZ. Esta AZ se cayó, llevándose consigo la aplicación. Si la capacidad mínima se establece en 2. Según la configuración de Auto Scale AZ, se habrían lanzado 2 instancias, una en cada AZ, haciendo que la arquitectura fuera a prueba de desastres y, por tanto, altamente disponible.
+
+### Desplace la inicialización del cliente de Amazon S3, fuera de su manejador de funciones
+
+Las prácticas recomendadas de AWS para Lambda sugieren aprovechar la reutilización del contexto de ejecución para mejorar el desempeño de sus funciones. Inicialice los clientes SDK y las conexiones de base de datos fuera del manejador de funciones, y almacene en caché los activos estáticos localmente en el directorio /tmp. Las invocaciones posteriores procesadas por la misma instancia de su función pueden reutilizar estos recursos. Esto ahorra tiempo y costes de ejecución. Para evitar posibles fugas de datos entre invocaciones, no utilices el contexto de ejecución para almacenar datos de usuario, eventos u otra información con implicaciones de seguridad.
+
+### Corregir la política del usuario de IAM para permitir la acción kms:GenerateDataKey
+
+Puede proteger los datos en reposo en Amazon S3 utilizando tres modos diferentes de cifrado del lado del servidor: SSE-S3, SSE-C o SSE-KMS. SSE-KMS requiere que AWS administre la clave de datos, pero usted administra la clave maestra del cliente (CMK) en AWS KMS. Puede elegir una CMK administrada por el cliente o la CMK administrada por AWS para Amazon S3 en su cuenta. Si elige cifrar sus datos utilizando las características estándar, AWS KMS y Amazon S3 realizan las siguientes acciones:
+
+- Amazon S3 solicita una clave de datos en texto plano y una copia de la clave cifrada con la CMK especificada.
+- AWS KMS genera una clave de datos, la cifra bajo la CMK y envía tanto la clave de datos en texto plano como la clave de datos cifrada a Amazon S3.
+- Amazon S3 cifra los datos utilizando la clave de datos y elimina la clave de texto sin formato de la memoria lo antes posible tras su uso.
+- Amazon S3 almacena la clave de datos cifrada como metadatos con los datos cifrados.
+
+El mensaje de error indica que su usuario o rol de IAM necesita permiso para la acción kms:GenerateDataKey. Este permiso es necesario para los buckets que utilizan cifrado por defecto con una clave personalizada de AWS KMS.
+
+En los documentos de política JSON, busque las políticas relacionadas con el acceso a AWS KMS. Revise las declaraciones con "Effect": "Permitir" para comprobar si el usuario o rol tiene permisos para la acción kms:GenerateDataKey en la clave AWS KMS del bucket. Si falta este permiso, añádalo a la política correspondiente.
+
+En los documentos de política JSON, busque declaraciones con "Effect": "Denegar". A continuación, confirme que esas declaraciones no deniegan la acción s3:PutObject en el bucket. Las declaraciones tampoco deben denegar al usuario o rol de IAM el acceso a la acción kms:GenerateDataKey sobre la clave utilizada para cifrar el bucket. Además, asegúrese de que los permisos necesarios de KMS y S3 no estén restringidos mediante una política de endpoint de VPC, una política de control de servicios, un límite de permisos o una política de sesión.
+
+### Cree una métrica personalizada en CloudWatch y haga que sus instancias le envíen datos mediante PutMetricData. A continuación, cree una alarma basada en esta métrica
+
+Puede crear una métrica personalizada de CloudWatch para las estadísticas de su instancia de EC2 Linux creando un script a través de la interfaz de línea de comandos de AWS (CLI de AWS). A continuación, puede monitorizar esa métrica enviándola a CloudWatch.
+
+Puede publicar sus propias métricas en CloudWatch utilizando la CLI de AWS o una API. Las métricas producidas por los servicios de AWS tienen una resolución estándar por defecto. Al publicar una métrica personalizada, puede definirla como de resolución estándar o de alta resolución. Cuando publica una métrica de alta resolución, CloudWatch la almacena con una resolución de 1 segundo y puede leerla y recuperarla con un periodo de 1 segundo, 5 segundos, 10 segundos, 30 segundos o cualquier múltiplo de 60 segundos.
+
+Las métricas de alta resolución pueden ofrecerle una visión más inmediata de la actividad por debajo del minuto de su aplicación. Sin embargo, cada llamada a PutMetricData para una métrica personalizada se cobra, por lo que llamar a PutMetricData más a menudo en una métrica de alta resolución puede conllevar cargos más elevados.
+
+### Utilizar grupos de usuarios de Cognito
+
+Como alternativa al uso de roles y políticas de IAM o autorizadores de Lambda, puede utilizar un grupo de usuarios de Amazon Cognito para controlar quién puede acceder a su API en Amazon API Gateway. Para utilizar un grupo de usuarios de Amazon Cognito con su API, primero debe crear un autorizador del tipo COGNITO_USER_POOLS y, a continuación, configurar un método de API para utilizar ese autorizador. Una vez desplegada la API, el cliente debe primero registrar al usuario en el grupo de usuarios, obtener un token de identidad o acceso para el usuario y, a continuación, llamar al método de la API con uno de los tokens, que normalmente se establecen en la cabecera Authorization de la petición. La llamada a la API sólo tiene éxito si se suministra el token requerido y el token suministrado es válido; de lo contrario, el cliente no está autorizado a realizar la llamada porque no dispone de credenciales que puedan ser autorizadas.
+
+### Amazon SQS es altamente escalable y no necesita ninguna intervención para manejar los altos volúmenes esperados.
+
+Amazon SQS aprovechal Cloud de AWS para escalar de forma dinámica, en función de la demanda. SQS se escala elásticamente con su aplicación, por lo que no tiene que preocuparse de la planificación de la capacidad ni del aprovisionamiento previo. Para la mayoría de las colas estándar (dependiendo del tráfico de la cola y de la acumulación de mensajes), puede haber un máximo de aproximadamente 120.000 mensajes en espera (recibidos de una cola por un consumidor, pero aún no eliminados de la cola).
+
+### Crear un evento cron en CloudWatch, que active una función de AWS Lambda que active el Snapshot de la base de datos
+
+Existen múltiples formas de ejecutar trabajos periódicos en AWS. CloudWatch Events con Lambda es la más sencilla de todas las soluciones. Para ello, cree una regla de CloudWatch y seleccione "Schedule" como origen del evento. Puedes utilizar una expresión cron o proporcionar una frecuencia fija (como cada 5 minutos). A continuación, seleccione "Función Lambda" como objetivo. Su Lambda tendrá el código necesario para la funcionalidad de Snapshot.
+
+### Hacer una llamada a la API GenerateDataKey que devuelva una clave en texto plano y una copia cifrada de una clave de datos. Utilizar una clave de texto plano para cifrar los datos
+
+La API GenerateDataKey genera una clave de datos simétrica única para el cifrado en el lado del cliente. Esta operación devuelve una copia en texto plano de la clave de datos y una copia cifrada bajo una clave maestra de cliente (CMK) que usted especifique. Puede utilizar la clave de texto sin formato para cifrar sus datos fuera de AWS KMS y almacenar la clave de datos cifrada con los datos cifrados.
+
+GenerateDataKey" devuelve una clave de datos única para cada petición. Los bytes de la clave de texto plano no están relacionados con la persona que realiza la llamada ni con la CMK.
+
+Para cifrar datos fuera de AWS KMS:
+
+Utilice la operación GenerateDataKey para obtener una clave de datos.
+
+Utilice la clave de datos en texto plano (en el campo Plaintext de la respuesta) para cifrar sus datos fuera de AWS KMS. A continuación, borre la clave de datos en texto plano de la memoria.
+Guarde la clave de datos cifrados (en el campo CiphertextBlob de la respuesta) con los datos cifrados.
+Para descifrar datos fuera de AWS KMS:
+
+Utilice la operación Decrypt para descifrar la clave de datos cifrada. La operación devuelve una copia en texto plano de la clave de datos.
+
+Utilice la clave de datos en texto sin formato para descifrar los datos fuera de AWS KMS y, a continuación, borre la clave de datos en texto sin formato de la memoria.
+
+### aws ec2 monitor-instances --instance-ids i-1234567890abcdef0
+
+Esto habilita la monitorización detallada para una instancia en ejecución.
+
+### Utilizar réplicas de lectura entre regiones.
+
+Además de utilizar réplicas de lectura para reducir la carga de su instancia de base de datos de origen, también puede utilizar réplicas de lectura para implementar una solución de recuperación ante desastres para su entorno de base de datos de producción. Si la instancia de la base de datos de origen falla, puede promover su réplica de lectura a un servidor de origen independiente. Las réplicas de lectura también pueden crearse en una región distinta a la de la base de datos de origen. El uso de réplicas de lectura entre regiones puede ayudarle a volver a ponerse en marcha si experimenta un problema de disponibilidad regional.
+
+### Habilite la característica de backup automatizado de Amazon RDS en un despliegue multi AZ que cree backups en una única región de AWS
+
+Amazon RDS proporciona soporte de alta disponibilidad y conmutación por error para instancias de base de datos mediante despliegues Multi-AZ. Amazon RDS utiliza varias tecnologías diferentes para proporcionar soporte de conmutación por error. Los despliegues Multi-AZ para instancias de base de datos MariaDB, MySQL, Oracle y PostgreSQL utilizan la tecnología de conmutación por error de Amazon.
+
+La característica de backup automatizado de Amazon RDS permite la recuperación puntual de su instancia de base de datos. Amazon RDS realizará backups de su base de datos y logs de transacciones y los almacenará durante un periodo de retención especificado por el usuario. Si se trata de una configuración Multi-AZ, las backups se realizan en la instancia en espera para reducir el impacto de E/S en la instancia principal. Las copias de seguridad automatizadas se limitan a una única región de AWS, mientras que las Snapshots manuales y las réplicas de lectura se soportan en varias regiones.
+
+### La invocación de la función Lambda es asíncrona
+
+Cuando un evento de invocación asíncrona supera la antigüedad máxima o falla todos los intentos de reintento, Lambda lo descarta. O lo envía a la cola de mensajes fallidos si ha configurado una.
+
+### El evento falla todos los intentos de procesamiento
+
+Una cola de mensajes fallidos actúa igual que un destino en caso de fallo en el sentido de que se utiliza cuando un evento falla todos los intentos de procesamiento o expira sin ser procesado.
+
+### Utilizar el sondeo largo de SQS para recuperar mensajes de las colas de Amazon SQS.
+
+Amazon Simple Queue Service (SQS) es un servicio de colas de mensajes totalmente administrado que permite desacoplar y escalar microservicios, sistemas distribuidos y aplicaciones sin servidor.
+
+Amazon SQS proporciona sondeo corto y sondeo largo para recibir mensajes de una cola. Por defecto, las colas utilizan el sondeo corto. Con el sondeo corto, Amazon SQS envía la respuesta inmediatamente, aunque la consulta no haya encontrado ningún mensaje. Con el sondeo largo, Amazon SQS envía una respuesta después de recopilar al menos un mensaje disponible, hasta el número máximo de mensajes especificado en la petición. Amazon SQS envía una respuesta vacía solo si expira el tiempo de espera de sondeo.
+
+El sondeo largo hace que resulte económico recuperar mensajes de la cola de Amazon SQS tan pronto como los mensajes estén disponibles. El sondeo largo ayuda a reducir el coste de utilización de Amazon SQS al eliminar el número de respuestas vacías (cuando no hay mensajes disponibles para una petición ReceiveMessage) y de falsas respuestas vacías (cuando hay mensajes disponibles pero no se incluyen en una respuesta). Cuando el tiempo de espera de la acción de la API ReceiveMessage es superior a 0, está en Effect el sondeo largo. El tiempo máximo de espera de sondeo largo es de 20 segundos.
+
+### CodeBuild se escala automáticamente, la organización no tiene que hacer nada para el escalado ni para las compilaciones paralelas
+
+AWS CodeBuild es un servicio de compilación totalmente administrado en el Cloud. CodeBuild compila el código fuente, ejecuta pruebas unitarias y genera artefactos listos para implementarse. CodeBuild elimina la necesidad de aprovisionar, administrar y escalar sus propios servidores de compilación. Proporciona entornos de compilación preempaquetados para los lenguajes de programación y las herramientas de compilación más populares, como Apache Maven, Gradle y otras. También puede personalizar entornos de compilación en CodeBuild para utilizar sus propias herramientas de compilación. CodeBuild se adapta automáticamente a los picos de peticiones de compilación.
+
+### Utilizar S3 Object Ownership para que el propietario predeterminado del bucket sea el propietario de todos los objetos del bucket.
+
+S3 Object Ownership es una configuración de bucket de Amazon S3 que puede utilizar para controlar la propiedad de los nuevos objetos que se cargan en sus buckets. Por defecto, cuando otras cuentas de AWS suben objetos a su bucket, los objetos siguen siendo propiedad de la cuenta que los sube. Con S3 Object Ownership, cualquier objeto nuevo que escriban otras cuentas con la lista de control de acceso (ACL) canned bucket-owner-full-control pasa automáticamente a ser propiedad del bucket owner, que pasa a tener el control total de los objetos.
+
+S3 Object Ownership tiene dos configuraciones:
+
+1. Escritor del objeto - La cuenta que sube el objeto será la propietaria del mismo.
+2. Bucket owner preferred - El bucket owner será el propietario del objeto si el objeto se carga con la ACL enlatada.
+
+**bucket-owner-full-control**. Sin esta configuración y ACL enlatada, el objeto se carga y sigue siendo propiedad de la cuenta que lo carga.
+
+### Declaraciones de logging en el código de la función Lambda que luego están disponibles a través de los logs de CloudWatch
+
+### Los desarrolladores deben insertar declaraciones de logging en el código de la función Lambda que luego están disponibles a través de los logs de CloudWatch
+
+Al invocar una función Lambda, pueden producirse dos tipos de errores. Los errores de invocación se producen cuando la petición de invocación se rechaza antes de que su función la reciba. Los errores de función se producen cuando el código o el tiempo de ejecución de su función devuelve un error. Dependiendo del tipo de error, el tipo de invocación y el cliente o servicio que invoca la función, el comportamiento de reintento y la estrategia de gestión de errores varía.
+
+Los fallos de la función Lambda suelen estar causados por:
+
+Problemas de permisos Problemas de código Problemas de red Estrangulamiento Errores 500 y 502 de la API de invocación
+
+Puede insertar declaraciones de logs en su código para ayudarle a validar que su código funciona según lo esperado. Lambda se integra automáticamente con CloudWatch Logs y envía todos los logs de su código a un grupo de CloudWatch Logs asociado a una función de Lambda, cuyo nombre es /aws/lambda/<nombre de función>.
+
+### Utilizar una política de IAM con el prefijo de identidad de Amazon Cognito para restringir a los usuarios el uso de sus propias carpetas en Amazon S3
+
+Los grupos de identidades de Amazon Cognito (identidades federadas) le permiten crear identidades únicas para sus usuarios y federarlas con proveedores de identidad. Con un grupo de identidades, puede obtener credenciales de AWS temporales y con privilegios limitados para obtener acceso a otros servicios de AWS. Los grupos de identidades de Amazon Cognito soportan los siguientes proveedores de identidades:
+
+Proveedores públicos: Iniciar sesión con Amazon (grupos de identidades), Facebook (grupos de identidades), Google (grupos de identidades), Iniciar sesión con Apple (grupos de identidades).
+
+Grupos de usuarios de Amazon Cognito:
+
+- Proveedores de OpenID Connect (grupos de identidades)
+- Proveedores de identidad SAML (grupos de identidades)
+- Identidades autenticadas por desarrolladores (grupos de identidades)
+
+Puede crear una política basada en identidades que permita a los usuarios de Amazon Cognito acceder a los objetos de un bucket de S3 específico. Esta política permite el acceso únicamente a objetos con un nombre que incluya Cognito, el nombre de la aplicación y el ID del usuario federado, representado por la variable ${cognito-identity.amazonaws.com:sub}.
