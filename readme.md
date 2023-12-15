@@ -38,11 +38,19 @@ Cuando utiliza el cifrado del lado del servidor con AWS KMS (SSE-KMS), puede uti
 
 La creación de su propia CMK administrada por el cliente le proporciona más flexibilidad y control sobre la CMK. Por ejemplo, puede crear, rotar y desactivar CMK administradas por el cliente. También puede definir controles de acceso y auditar las CMK gestionadas por el cliente que utilice para proteger sus datos.
 
+### DynamoDB
+
+Una secuencia de DynamoDB es un flujo ordenado de información sobre los cambios realizados en los elementos de una tabla de DynamoDB. Cuando habilita un stream en una tabla, DynamoDB Streams captura una secuencia ordenada en el tiempo de las modificaciones a nivel de elemento en cualquier tabla de DynamoDB y almacena esta información en un log durante un máximo de 24 horas. Las aplicaciones pueden acceder a este logs y ver los elementos de datos tal y como aparecían antes y después de ser modificados, prácticamente en tiempo real.
+
+Cada vez que una aplicación crea, actualiza o elimina elementos de la tabla, DynamoDB Streams escribe un registro de stream con los atributos de clave principal de los elementos modificados.
+
 ### SSE-S3 - Server-Side Encryption
 
 Al utilizar Server-Side Encryption with Amazon S3-Managed Keys (SSE-S3), cada objeto se cifra con una clave única que emplea un cifrado multifactor potente. Como salvaguarda adicional, cifra la propia clave con una clave maestra que rota periódicamente. El cifrado del lado del servidor de Amazon S3 utiliza uno de los cifrados por bloques más potentes disponibles, el Estándar de cifrado avanzado de 256 bits (AES-256), para cifrar sus datos.
 
 ### SSE-C
+
+Amazon S3 rechazará cualquier petición realizada a través de HTTP cuando se utilice SSE-C. Por consideraciones de seguridad, AWS recomienda que consideres que cualquier clave que envíes erróneamente utilizando HTTP está comprometida.
 
 Dispone de las siguientes opciones para proteger los datos en reposo en Amazon S3:
 
@@ -332,6 +340,10 @@ Un autorizador de Lambda de Amazon API Gateway (anteriormente conocido como auto
 En lugar de crear políticas individuales para cada usuario, puede utilizar variables de política y crear una única política que se aplique a varios usuarios (una política de grupo). Las variables de política actúan como marcadores de posición. Cuando realiza una petición a AWS, el marcador de posición se sustituye por un valor de la petición cuando se evalúa la política.
 
 A modo de ejemplo, la siguiente política otorga a cada uno de los usuarios del grupo acceso programático completo a un objeto específico del usuario (su propio "directorio personal") en Amazon S3.
+
+### Cognito Identity Pools
+
+Los grupos de identidades de Amazon Cognito proporcionan credenciales de AWS temporales para los usuarios que son invitados (no autenticados) y para los usuarios que han sido autenticados y han recibido un token. Los grupos de identidades proporcionan credenciales de AWS para conceder a sus usuarios acceso a otros servicios de AWS.
 
 ### Cognito User Pools
 
@@ -1143,3 +1155,265 @@ Grupos de usuarios de Amazon Cognito:
 - Identidades autenticadas por desarrolladores (grupos de identidades)
 
 Puede crear una política basada en identidades que permita a los usuarios de Amazon Cognito acceder a los objetos de un bucket de S3 específico. Esta política permite el acceso únicamente a objetos con un nombre que incluya Cognito, el nombre de la aplicación y el ID del usuario federado, representado por la variable ${cognito-identity.amazonaws.com:sub}.
+
+### Mover la conexión a la base de datos fuera del manejador
+
+Aquí, en cada ejecución de la función Lambda, se creará el manejador de conexión a la base de datos, y luego se cerrará. Estos pasos de conexión son caros en términos de tiempo, y por lo tanto deben ser movidos fuera de la función handler para que se mantengan en el contexto de ejecución de la función, y se reutilicen a través de llamadas a la función.
+
+### Basado en la ruta
+
+Puede crear una escucha con reglas para reenviar peticiones basadas en la ruta de la URL. Esto se conoce como enrutamiento basado en ruta. Si está ejecutando microservicios, puede enrutar el tráfico a múltiples servicios back-end utilizando enrutamiento basado en ruta. Por ejemplo, puede dirigir peticiones generales a un grupo de destino y peticiones para renderizar imágenes a otro grupo de destino.
+
+Este enrutamiento basado en rutas le permite dirigir peticiones a, por ejemplo, /api a un conjunto de servidores (también conocidos como grupos de destino) y /mobile a otro conjunto. Segmentar el tráfico de esta forma le permite controlar el entorno de procesamiento de cada categoría de peticiones. Quizás las peticiones de /api se procesen mejor en instancias optimizadas para computación, mientras que las peticiones de /mobile se gestionen mejor en instancias optimizadas para memoria.
+
+### Basado en host
+
+Puede crear reglas de Application Load Balancer que enruten el tráfico entrante basándose en el nombre de dominio especificado en el encabezado Host. Las peticiones a api.ejemplo.com pueden enviarse a un grupo de destino, las peticiones a mobile.ejemplo.com a otro, y todas las demás (mediante una regla predeterminada) pueden enviarse a un tercero. También puede crear reglas que combinen el enrutamiento basado en host y el enrutamiento basado en ruta. Esto le permitiría dirigir peticiones a api.example.com/production y api.example.com/sandbox a grupos de destino distintos.
+
+### Cachear dependencias en S3
+
+AWS CodeBuild es un servicio de integración continua totalmente administrado que compila código fuente, ejecuta pruebas y produce paquetes de software listos para implementarse. Con CodeBuild, no necesita aprovisionar, administrar ni escalar sus servidores de compilación.
+
+La descarga de dependencias es una fase crítica del proceso de compilación. El tamaño de estos archivos dependientes puede oscilar entre unos pocos KB y varios MB. Dado que la mayoría de los archivos dependientes no cambian con frecuencia entre compilaciones, puede reducir notablemente el tiempo de compilación almacenando en caché las dependencias en S3.
+
+### Mejores prácticas para el caché
+
+- De forma predeterminada, el archivo de caché se cifra en el lado del servidor con la clave KMS del artefacto del cliente.
+Puede caducar el caché eliminando manualmente el archivo de caché de S3. Como alternativa, puede hacer caducar la caché utilizando una política de ciclo de vida de S3.
+
+- Puedes anular el comportamiento de la caché actualizando el proyecto. Puede utilizar AWS CodeBuild la consola de AWS CodeBuild, la CLI de AWS o los SDK de AWS para actualizar el proyecto. También puede invalidar la configuración de caché utilizando la nueva API InvalidateProjectCache. Esta API fuerza la generación de una nueva InvalidationKey, lo que garantiza que las compilaciones futuras reciban una caché vacía. Esta API no elimina la caché existente, porque esto podría causar incoherencias con las compilaciones actualmente en desarrollo.
+
+- El caché se puede habilitar para cualquier carpeta en el entorno de compilación, pero le recomendamos que solo almacene en caché las dependencias/archivos que no cambien con frecuencia entre compilaciones. Además, para evitar un comportamiento inesperado de la aplicación, no almacene en caché la configuración ni la información confidencial.
+
+### Un ALB tiene tres posibles tipos de destino: Instancia, IP y Lambda
+
+Cuando se crea un grupo de destino, se especifica su tipo de destino, que determina el tipo de destino que se especifica al registrar destinos con este grupo de destino. Después de crear un grupo de destino, no puede cambiar su tipo de destino. A continuación se indican los posibles tipos de destino:
+
+1. ***Instancia*** - Los destinos se especifican por ID de instancia.
+1. ***IP*** - Los destinos son direcciones IP
+1. ***Lambda*** - El destino es una función Lambda
+
+### No se pueden especificar direcciones IP enrutables públicamente a un ALB.
+
+Cuando el tipo de destino es IP, sólo se pueden especificar direcciones IP de bloques CIDR específicos. No se pueden especificar direcciones IP enrutables públicamente.
+
+### Para conceder permisos entre cuentas, debe adjuntar una política de permisos basada en identidades a un rol de IAM
+
+Por ejemplo, el administrador de la cuenta A de AWS puede crear un rol para conceder permisos entre cuentas a la cuenta B de AWS de la siguiente manera:
+
+1. El administrador de la cuenta A crea un rol de IAM y adjunta una política de permisos -que concede permisos sobre los recursos de la cuenta A- al rol.
+
+1. El administrador de la cuenta A adjunta una política de confianza al rol que identifica a la cuenta B como el principal que puede asumir el rol.
+
+1. El administrador de la cuenta B delega el permiso para asumir el rol a cualquier usuario de la cuenta B. Esto permite a los usuarios de la cuenta B crear colas en la cuenta A o acceder a ellas.
+
+### Utilizar la función de integración de CloudWatch con S3
+
+Puede exportar datos de logs de sus grupos de logs de CloudWatch a un bucket de Amazon S3 y utilizar estos datos en procesamientos y análisis personalizados, o para cargarlos en otros sistemas.
+
+### Utilizar el parámetro DelaySeconds
+
+Las colas de retardo te permiten posponer la entrega de nuevos mensajes a una cola durante varios segundos, por ejemplo, cuando tu aplicación de consumo necesita tiempo adicional para procesar los mensajes. Si creas una cola de retardo, los mensajes que envíes a la cola permanecerán invisibles para los consumidores durante el periodo de retardo. El retardo por defecto (mínimo) para una cola es de 0 segundos. El máximo es de 15 minutos.
+
+### Los repositorios se cifran automáticamente en reposo
+
+Los datos de los repositorios de AWS CodeCommit se cifran en tránsito y en reposo. Cuando los datos se introducen en un repositorio de AWS CodeCommit (por ejemplo, llamando a git push), AWS CodeCommit cifra los datos recibidos a medida que se almacenan en el repositorio.
+
+### Reglas de CloudWatch Events con AWS Lambda
+
+Puede crear una función Lambda e indicar a CloudWatch Events que la ejecute según una programación periódica. Puede especificar una tasa fija (por ejemplo, ejecutar una función Lambda cada hora o cada 15 minutos), o puede especificar una expresión Cron.
+
+### Orden correcto de los eventos del ciclo de vida AppSpec
+
+AWS CodeDeploy le facilita el lanzamiento rápido de nuevas características, le ayuda a evitar el tiempo de inactividad durante la implementación de aplicaciones y maneja la complejidad de actualizar sus aplicaciones.
+
+DownloadBundle => BeforeInstall => ApplicationStart => ValidateService
+
+### El propietario del bucket también debe ser el propietario del objeto para obtener los logs de acceso al objeto
+
+Si el propietario del bucket es también el propietario del objeto, el propietario del bucket obtiene los logs de acceso al objeto. En caso contrario, el propietario del bucket debe obtener permisos, a través de la ACL del objeto, para la misma API del objeto para obtener los mismos logs de la API de acceso al objeto.
+
+### La clave de partición que ha seleccionado no está lo suficientemente distribuida
+
+Amazon Kinesis Data Streams le permite crear aplicaciones personalizadas que procesan o analizan datos de streaming para necesidades especializadas.
+
+Un stream de datos de Kinesis es un conjunto de shards. Un fragmento es una secuencia identificada de forma exclusiva de registros de datos en un stream. Un stream se compone de uno o más shards, cada uno de los cuales proporciona una unidad fija de capacidad.
+
+Kinesis Data Streams utiliza la clave de partición para distribuir los datos entre los shards. Kinesis Data Streams segrega los registros de datos que pertenecen a un stream en varios shards, utilizando la clave de partición asociada a cada registro de datos para determinar el shard al que pertenece un registro de datos determinado.
+
+### 'x-amz-server-side-encryption': 'AES256'
+
+El cifrado del lado del servidor protege los datos en reposo. Amazon S3 cifra cada objeto con una clave única. Como protección adicional, cifra la propia clave con una clave maestra que rota periódicamente. El cifrado del lado del servidor de Amazon S3 utiliza uno de los cifrados por bloques más potentes disponibles para cifrar sus datos, el Estándar de cifrado avanzado de 256 bits (AES-256).
+
+### Todos los nodos de un Cluster Redis deben residir en la misma región
+
+Todos los nodos de un cluster Redis (modo Cluster habilitado o modo Cluster deshabilitado) deben residir en la misma región.
+
+### Mientras se utiliza Redis con el modo Cluster activado, no se puede promover manualmente ninguno de los nodos réplica a primario.
+
+Mientras se utiliza Redis con el modo Cluster habilitado, existen algunas limitaciones:
+
+1. No puedes promover manualmente ninguno de los nodos réplica a primario.
+
+1. Se requiere Multi-AZ.
+
+1. Sólo se puede cambiar la estructura de un Cluster, el tipo de nodo y el número de nodos restaurando desde una copia de seguridad.
+
+### El usuario puede enviar una petición ReceiveMessage a example_queue, la política IAM permite esta acción
+
+El usuario tiene una política IAM y una política Amazon SQS que se aplican a su cuenta. La política IAM concede permiso a su cuenta para la acción ReceiveMessage en example_queue, mientras que la política de Amazon SQS concede permiso a su cuenta para la acción SendMessage en la misma cola.
+
+### Si añades una política que niegue al usuario el acceso a todas las acciones de la cola, la política anulará las otras dos políticas y el usuario no tendrá acceso a ejemplo_cola
+
+Para eliminar el acceso total del usuario a la cola, lo más sencillo es añadir una política que le deniegue el acceso a todas las acciones de la cola. Esta política anula las otras dos porque una denegación explícita siempre anula un permiso.
+
+### Crear un evento de S3 para invocar una función de Lambda que inserte registros en DynamoDB
+
+La característica de notificaciones de Amazon S3 le permite recibir notificaciones cuando se producen determinados eventos en su bucket. Para habilitar las notificaciones, primero debe añadir una configuración de notificación que identifique los eventos que desea que Amazon S3 publique y los destinos a los que desea que Amazon S3 envíe las notificaciones. Esta configuración se almacena en el subrecurso de notificación asociado a un bucket.
+
+Las API de Amazon S3 como PUT, POST y COPY pueden crear un objeto. Utilizando estos tipos de evento, puede habilitar la notificación cuando se crea un objeto utilizando una API específica, o puede utilizar el tipo de evento s3:ObjectCreated:* para solicitar la notificación independientemente de la API que se utilizó para crear un objeto.
+
+Para el caso de uso dado, se crearía una notificación de evento S3 que active una función Lambda cada vez que tengamos una operación de objeto PUT en el bucket S3. A su vez, la función Lambda ejecutaría código personalizado para insertar registros en DynamoDB.
+
+### Utilizar ElastiCache para mantener las sesiones de usuario
+
+Amazon ElastiCache le permite configurar, ejecutar y escalar sin problemas almacenes de datos en memoria populares compatibles con código abierto en el Cloud. Cree aplicaciones de uso intensivo de datos o aumente el desempeño de sus bases de datos existentes recuperando datos de almacenes de datos en memoria de alto desempeño y baja latencia. Amazon ElastiCache es una opción popular para casos de uso en tiempo real como almacenamiento en caché, almacenes de sesión, juegos, servicios geoespaciales, análisis en tiempo real y colas.
+
+### Utilizar escaneos paralelos
+
+Por defecto, la operación Scan procesa los datos de forma secuencial. Amazon DynamoDB devuelve datos a la aplicación en incrementos de 1 MB, y una aplicación realiza operaciones de Escaneo adicionales para recuperar el siguiente 1 MB de datos. Cuanto mayor sea la tabla o el índice que se está escaneando, más tiempo tardará en completarse la operación de escaneo. Para solucionar estos problemas, la operación de exploración puede dividir lógicamente una tabla o un índice secundario en varios segmentos, con varios trabajadores de aplicación explorando los segmentos en paralelo.
+
+Para utilizar la función de Escaneado en paralelo, deberá ejecutar varios procesos o subprocesos en paralelo. Cada trabajador podrá escanear una partición independiente de una tabla de forma simultánea con los demás trabajadores.
+
+### Utilizar Amazon S3 y realizar cambios de código en la aplicación para que todas las cargas se pongan en S3
+
+Amazon S3 es un almacenamiento de objetos creado para almacenar y recuperar cualquier cantidad de datos desde cualquier lugar de Internet. Es un servicio de almacenamiento sencillo que ofrece una infraestructura de almacenamiento de datos extremadamente duradera, altamente disponible e infinitamente escalable a un costo muy bajo.
+
+Amazon S3 proporciona una sencilla interfaz de servicio web que puede utilizar para almacenar y recuperar cualquier cantidad de datos, en cualquier momento, desde cualquier lugar de la web. Mediante este servicio web, puede crear fácilmente aplicaciones que hagan uso del almacenamiento en Internet.
+
+Puede utilizar la API PutObject de S3 desde la aplicación para cargar los objetos en un único bucket, al que luego se puede acceder desde todas las instancias.
+
+### Utilizar el campo "Exportar" de la sección Salida de la plantilla del stack
+
+Para compartir información entre stacks, exporte los valores de salida de un stack. Otros stacks que estén en la misma cuenta de AWS y región pueden importar los valores exportados.
+
+Para exportar los valores de salida de una pila, utilice el campo Exportar de la sección Salida de la plantilla de la pila. Para importar esos valores, utilice la función Fn::ImportValue en la plantilla de los otros stacks.
+
+### Aprovechar las capacidades que ofrece ElastiCache para Redis con el modo Cluster habilitado
+
+Puede utilizar Amazon ElastiCache para acelerar las cargas de trabajo de las aplicaciones de gran volumen almacenando los datos en la memoria caché, lo que proporciona un rendimiento de recuperación de datos inferior al milisegundo. Cuando se utiliza junto con cualquier base de datos, incluidos Amazon RDS o Amazon DynamoDB, ElastiCache puede aliviar la presión asociada con cargas de peticiones pesadas, aumentar el desempeño general de la aplicación y reducir los costos asociados con el escalado para el desempeño en otras bases de datos.
+
+### Agregar una regla a las ACL de red para permitir el tráfico saliente en los puertos 1024 - 65535
+
+Una lista de control de acceso a la red (ACL) es una capa opcional de seguridad para su VPC que actúa como firewall para controlar el tráfico que entra y sale de una o más subredes. Puede configurar ACL de red con reglas similares a sus grupos de seguridad para añadir una capa adicional de seguridad a su VPC.
+
+Cuando se crea una ACL de red personalizada y se asocia a una subred, por defecto, esta ACL de red personalizada deniega todo el tráfico entrante y saliente hasta que se añaden reglas. Una ACL de red tiene reglas de entrada y salida separadas, y cada regla puede permitir o denegar el tráfico. Las ACL de red no tienen estado, lo que significa que las respuestas al tráfico entrante permitido están sujetas a las reglas para el tráfico saliente (y viceversa).
+
+El cliente que inicia la petición elige el rango de puertos efímeros. El rango varía en función del sistema operativo del cliente. Las peticiones originadas desde Elastic Load Balancing utilizan los puertos 1024-65535.
+
+### Otorgue permisos a AWS CodeBuild para cargar el resultado de la compilación en su bucket de Amazon S3
+
+Si elige ProjectArtifacts y su tipo de valor es S3, el proyecto de compilación almacena el resultado de la compilación en Amazon Simple Storage Service (Amazon S3). Para ello, deberá otorgar permisos de carga a AWS CodeBuild.
+
+### Crear un LSI
+
+LSI significa Índice Secundario Local. Algunas aplicaciones sólo necesitan consultar datos utilizando la clave primaria de la tabla base; sin embargo, puede haber situaciones en las que una clave de ordenación alternativa sería útil. Para que su aplicación pueda elegir entre varias claves de ordenación, puede crear uno o varios índices secundarios locales en una tabla y emitir peticiones de consulta o exploración contra estos índices.
+
+### Borrar y volver a crear la tabla
+
+La operación DeleteTable elimina una tabla y todos sus elementos. Tras una petición DeleteTable, la tabla especificada se encuentra en estado DELETING hasta que DynamoDB completa la eliminación.
+
+### Mantener el código fuente en un bucket de Amazon S3 e iniciar AWS CodePipeline cada vez que se actualice un archivo del bucket de S3
+
+AWS CodePipeline es un servicio de entrega continua totalmente administrado que le ayuda a automatizar sus canalizaciones de lanzamiento para actualizaciones rápidas y fiables de aplicaciones e infraestructuras. CodePipeline automatiza las fases de creación, test e implementación de su proceso de lanzamiento cada vez que se produce un cambio en el código, en función del modelo de lanzamiento que defina.
+
+### Utilizar una tarea cron en las instancias que empuje las estadísticas de RAM de EC2 como métrica personalizada en CloudWatch
+
+Los scripts de monitorización de Amazon CloudWatch para instancias basadas en Linux de Amazon Elastic Compute Cloud (Amazon EC2) demuestran cómo producir y consumir métricas personalizadas de Amazon CloudWatch. Estos scripts Perl comprenden un ejemplo totalmente funcional que informa de métricas de utilización de memoria, swap y espacio en disco para una instancia Linux. Puede establecer un cron schedule para las métricas reportadas a CloudWatch y reportar la utilización de memoria a CloudWatch cada x minutos.
+
+### Orden de ejecución de los hooks para las implantaciones in situ mediante CodeDeploy
+
+Detención de la aplicación -> Antes de instalar -> Inicio de la aplicación -> ValidarServicio
+
+En CodeDeploy, un despliegue es un proceso de instalación de contenido en una o más instancias. Este contenido puede consistir en código, archivos web y de configuración, ejecutables, paquetes, scripts, etc. CodeDeploy despliega contenido que está almacenado en un repositorio de fuentes, de acuerdo con las reglas de configuración que especifiques.
+
+### AWS STS decode-authorization-message
+
+Utilice decode-authorization-message para decodificar información adicional sobre el estado de autorización de una petición a partir de un mensaje codificado devuelto en respuesta a una petición de AWS. Si un usuario no está autorizado a realizar una acción solicitada, la petición devuelve una respuesta Client.UnauthorizedOperation (una respuesta HTTP 403). El mensaje se codifica porque los detalles del estado de autorización pueden constituir información privilegiada que el usuario que solicitó la operación no debería ver. Para descodificar un mensaje de estado de autorización, un usuario debe tener permisos concedidos a través de una política IAM para solicitar la acción DecodeAuthorizationMessage (sts:DecodeAuthorizationMessage).
+
+### Se despliega un nuevo despliegue de la última versión de trabajo conocida de la aplicación con un nuevo ID de despliegue.
+
+AWS CodeDeploy es un servicio que automatiza las implementaciones de código en cualquier instancia, incluidas las instancias de Amazon EC2 y las instancias que se ejecutan on-premise. AWS CodeDeploy le facilita el lanzamiento rápido de nuevas características, le ayuda a evitar el tiempo de inactividad durante la implementación y gestiona la complejidad de la actualización de sus aplicaciones.
+
+CodeDeploy Rolling back despliega una revisión previamente desplegada de una aplicación como un nuevo despliegue. Estos despliegues revertidos son técnicamente nuevos despliegues, con nuevos ID de despliegue, en lugar de versiones restauradas de un despliegue anterior.
+
+Para revertir una aplicación a una revisión anterior, solo tiene que implementar esa revisión. AWS CodeDeploy realiza un seguimiento de los archivos que se copiaron para la revisión actual y los elimina antes de iniciar una nueva implementación, por lo que no hay diferencia entre redeploy y rollback. Sin embargo, debe asegurarse de que las revisiones anteriores están disponibles para el rollback.
+
+### Instalar y configurar Kinesis Agent en cada una de las instancias
+
+Kinesis Agent es una aplicación de software Java independiente que ofrece una forma sencilla de recopilar y enviar datos a Kinesis Data Streams. El agente supervisa continuamente un conjunto de archivos y envía nuevos datos a su stream. El agente gestiona la rotación de archivos, los puntos de control y los reintentos en caso de fallo. Entrega todos los datos de forma fiable, puntual y sencilla. También emite métricas de Amazon CloudWatch para ayudarle a monitorizar y solucionar mejor el proceso de stream.
+
+Puede instalar el agente en entornos de servidores basados en Linux, como servidores web, servidores de logs y servidores de bases de datos. Tras instalar el agente, configúrelo especificando los archivos que desea monitorizar y el stream para los datos. Una vez configurado, el agente recopila de forma duradera los datos de los archivos y los envía de forma fiable al stream.
+
+El agente también puede preprocesar los registros analizados de los ficheros monitorizados antes de enviarlos a su stream. Puede activar esta función añadiendo el ajuste de configuración dataProcessingOptions a su flujo de archivos. Se pueden añadir una o más opciones de procesamiento, que se ejecutarán en el orden especificado.
+
+### Usando el encabezado Cache-Control: max-age=0
+
+Un cliente de su API puede invalidar una entrada de caché existente y recargarla desde el endpoint de integración para peticiones individuales. El cliente debe enviar una petición que contenga el encabezado Cache-Control: max-age=0. El cliente recibe la respuesta directamente del endpoint de integración en lugar de la caché, siempre que el cliente esté autorizado para ello. De este modo, se sustituye la entrada existente en la caché por la nueva respuesta, que se obtiene del endpoint de integración.
+
+### Utilizar un alias de función Lambda que pueda apuntar a las diferentes versiones
+
+Puedes utilizar versiones para gestionar el despliegue de tus funciones. Por ejemplo, puedes publicar una nueva versión de una función para testearla en versión beta sin afectar a los usuarios de la versión estable de producción. Lambda crea una nueva versión de la función cada vez que la publica. La nueva versión es una copia de la versión no publicada de la función.
+
+Al publicar una versión de la función, puede almacenar el código y la configuración como un recurso independiente que no se puede modificar.
+
+Un alias Lambda es como un puntero a una versión específica de la función. Los usuarios pueden acceder a la versión de la función utilizando el alias Nombre de recurso de Amazon (ARN). Cada alias tiene un ARN único. Un alias solo puede apuntar a una versión de función, no a otro alias. Puede actualizar un alias para que apunte a las distintas versiones de la función Lambda.
+
+### Métricas de CloudWatch
+
+Amazon CloudWatch monitoriza sus recursos de Amazon Web Services (AWS) y las aplicaciones que ejecuta en AWS en tiempo real. Puede utilizar CloudWatch para recopilar y realizar un seguimiento de las métricas, que son variables que puede medir para sus recursos y aplicaciones. Los datos métricos se conservan durante 15 meses, lo que le permite ver tanto los datos actualizados como los históricos.
+
+CloudWatch conserva los datos métricos de la siguiente manera:
+
+Los puntos de datos con un periodo inferior a 60 segundos están disponibles durante 3 horas. Estos puntos de datos son métricas personalizadas de alta resolución. Los puntos de datos con un periodo de 60 segundos (1 minuto) están disponibles durante 15 días. Los puntos de datos con un periodo de 300 segundos (5 minutos) están disponibles durante 63 días. Los puntos de datos con un período de 3600 segundos (1 hora) están disponibles durante 455 días (15 meses).
+
+### Alarmas de CloudWatch
+
+Puede utilizar una alarma para iniciar automáticamente acciones en su nombre. Una alarma vigila una única métrica durante un tiempo especificado y realiza una o más acciones especificadas, basadas en el valor de la métrica en relación con un umbral a lo largo del tiempo. La acción es una notificación enviada a un Tema SNS de Amazon o a una política de Auto Scaling. También puede añadir alarmas a los dashboards.
+
+Las alarmas de CloudWatch envían notificaciones o realizan cambios automáticamente en los recursos que está monitorizando en función de las reglas que defina. Las alarmas funcionan junto con las métricas de CloudWatch.
+
+Una alarma de métrica tiene los siguientes estados posibles:
+
+- OK - La métrica o expresión está dentro del umbral definido.
+
+- ALARMA - La métrica o expresión está fuera del umbral definido.
+
+- DATOS_INSUFICIENTES - La alarma acaba de iniciarse, la métrica no está disponible o no hay suficientes datos disponibles para la métrica para determinar el estado de alarma.
+
+### Utilizar el comando de la CLI de AWS associate-kms-key y especificar el ARN de la clave KMS
+
+Los datos del grupo de logs siempre están cifrados en CloudWatch Logs. Puede utilizar opcionalmente AWS AWS Key Management Service para este cifrado. Si lo hace, el cifrado se realiza utilizando una clave maestra de cliente (CMK) de AWS KMS (AWS KMS). El cifrado mediante AWS KMS se habilita a nivel de grupo de logs, asociando una CMK a un grupo de logs, ya sea al crear el grupo de logs o después de que exista.
+
+Después de asociar una CMK con un grupo de logs, todos los datos recién ingestados para el grupo de logs se cifran utilizando la CMK. Estos datos se almacenan en un formato cifrado durante todo su periodo de retención. CloudWatch Logs descifra estos datos siempre que se soliciten. CloudWatch Logs debe tener permisos para la CMK siempre que se soliciten datos cifrados.
+
+Para asociar la CMK a un grupo de logs existente, puede utilizar el comando associate-kms-key.
+
+### Despliegue Blue/Green
+
+Con un despliegue Blue/Green, se aprovisiona un nuevo conjunto de instancias en las que CodeDeploy instala la última versión de su aplicación. A continuación, CodeDeploy redirige el tráfico del Load Balancer desde un conjunto existente de instancias que ejecutan la versión anterior de su aplicación al nuevo conjunto de instancias que ejecutan la última versión. Una vez redirigido el tráfico a las nuevas instancias, se pueden cerrar las instancias existentes.
+
+### Amazon ElastiCache para Redis
+
+Amazon ElastiCache para Redis es un servicio de estructura de datos en memoria compatible con Redis que puede utilizarse como almacén o caché de datos. Ofrece la facilidad de uso y la potencia de Redis junto con la disponibilidad, la fiabilidad, la escalabilidad, la seguridad y el rendimiento adecuados para las aplicaciones más exigentes.
+
+Además de Strings, Redis soporta listas, conjuntos, conjuntos ordenados, hashes, matrices de bits e hyperlog logs. Las aplicaciones pueden utilizar estas estructuras de datos más avanzadas para dar soporte a una gran variedad de casos de uso. Por ejemplo, puede utilizar Redis Sorted Sets para implementar fácilmente una tabla de clasificación de juego que mantiene una lista de jugadores ordenados por su rango.
+
+### cloudformation package
+
+El comando cloudformation package empaqueta los artefactos locales (rutas locales) a los que hace referencia su plantilla de AWS CloudFormation. El comando cargará artefactos locales, como el código fuente de tu función AWS Lambda.
+
+### cloudformation deploy
+
+El comando cloudformation deploy despliega la plantilla de AWS CloudFormation especificada creando y luego ejecutando un changeset.
+
